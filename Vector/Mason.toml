@@ -1,0 +1,7 @@
+[brick]
+name = "Vector"
+version = "0.1.0"
+chplVersion = "1.23.0"
+author = "Yujia Qiao(rapiz1) code@rapiz.me"
+
+[dependencies]

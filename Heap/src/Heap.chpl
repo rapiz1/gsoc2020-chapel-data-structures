@@ -73,7 +73,7 @@ module Heap {
       Comparator record that defines how the
       data is compared. The greatest element will be on the top.
     */
-    type comparator = DefaultComparator; 
+    var comparator: record;
 
     /* If `true`, this heap will perform parallel safe operations. */
     param parSafe = false;
@@ -96,7 +96,7 @@ module Heap {
       _data = new list(int);
       for x in iterable do
         _data.append(x);
-      for i in 1 .. _data.size by -1 {
+      for i in 1 .. _data.size-1 by -1 {
         _heapify_down(i);
       }
     }
@@ -111,7 +111,7 @@ module Heap {
       :arg parSafe: If `true`, this heap will use parallel safe operations.
       :type parSafe: `param bool`
     */
-    proc init(type eltType, type comparator=DefaultComparator, param parSafe=false) {
+    proc init(type eltType, comparator: record = defaultComparator, param parSafe=false) {
       this.eltType = eltType;
       this.comparator = comparator;
       this.parSafe = parSafe;
@@ -124,13 +124,12 @@ module Heap {
 
       :arg other: The heap to initialize from.
     */
-    // FIXME: Why does it not work?
-    proc init=(other: heap(this.type.eltType, ?cmp)) {
+    proc init=(other: heap(this.type.eltType)) {
       if !isCopyableType(this.type.eltType) then
         compilerError("Cannot copy heap with element type that cannot be copied");
 
       this.eltType = this.type.eltType;
-      this.comparator = this.type.comparator;
+      this.comparator = other.comparator;
       this.parSafe = this.type.parSafe;
       this.complete();
       _commonInitFromIterable(other._data);
@@ -147,7 +146,7 @@ module Heap {
         compilerError("Cannot copy list with element type that cannot be copied");
 
       this.eltType = this.type.eltType;
-      this.comparator = this.type.comparator;
+      this.comparator = new this.type.comparator();
       this.parSafe = this.type.parSafe;
       this.complete();
       _commonInitFromIterable(other);
@@ -164,7 +163,7 @@ module Heap {
         compilerError("Cannot copy heap from array with element type that cannot be copied");
 
       this.eltType = this.type.eltType;
-      this.comparator = this.type.comparator;
+      this.comparator = new this.type.comparator();
       this.parSafe = this.type.parSafe;
       this.complete();
       _commonInitFromIterable(other);
@@ -184,7 +183,7 @@ module Heap {
     */
     proc init=(other: range(this.type.eltType, ?b, ?d)) {
       this.eltType = this.type.eltType;
-      this.comparator = this.type.comparator;
+      this.comparator = new this.type.comparator();
       this.parSafe = this.type.parSafe;
 
       if !isBoundedRange(other) {
@@ -255,7 +254,7 @@ module Heap {
       if (boundsChecking && isEmpty()) {
         boundsCheckHalt("Called \"heap.top\" on an empty heap.");
       }
-      var result = _data(1);
+      var result = _data(0);
       _leave();
       return result;
     }
@@ -265,9 +264,7 @@ module Heap {
     */
     pragma "no doc"
     proc _greater(x:eltType, y:eltType) {
-      //TODO: We should create the instance elsewhere to reuse it.
-      var cmp = new comparator();
-      return chpl_compare(x, y, cmp) > 0;
+      return chpl_compare(x, y, comparator) > 0;
     }
 
     /*
@@ -275,7 +272,7 @@ module Heap {
     */
     pragma "no doc"
     proc _heapify_up(in pos:int) {
-      while (pos != 1) {
+      while (pos) {
         var parent = pos / 2;
         if (_greater(_data[pos],_data[parent])) {
           _data[parent] <=> _data[pos];
@@ -287,11 +284,11 @@ module Heap {
 
     pragma "no doc"
     proc _heapify_down(in pos:int) {
-      while (pos <= _data.size) {
+      while (pos < _data.size) {
         // find the child node with greater value
         var greaterChild = pos*2;
-        if (greaterChild > _data.size) then break; // reach leaf node, break
-        if (greaterChild + 1 <= _data.size) {
+        if (greaterChild >= _data.size) then break; // reach leaf node, break
+        if (greaterChild + 1 < _data.size) {
           // if the right child node exists
           if (_greater(_data[greaterChild+1],_data[greaterChild])) {
             // if the right child is greater, then update the greaterChild
@@ -316,7 +313,7 @@ module Heap {
     proc push(element:eltType) {
       _enter();
       _data.append(element);
-      _heapify_up(_data.size);
+      _heapify_up(_data.size-1);
       _leave();
     }
 
@@ -332,7 +329,7 @@ module Heap {
       if (boundsChecking && isEmpty()) {
         boundsCheckHalt("Called \"heap.pop\" on an empty heap.");
       }
-      _data(1) <=> _data(_data.size);
+      _data(0) <=> _data(_data.size-1);
       _data.pop();
       _heapify_down(1);
       _leave();

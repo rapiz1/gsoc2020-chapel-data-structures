@@ -1,2 +1,4 @@
-var h1:heap(int) = 1..10;
+use Heap;
+use Sort;
+var h1 = new heap(int);
 var h2:heap(int) = h1;

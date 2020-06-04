@@ -1,2 +1,3 @@
-var l:list(int) = 1..10 by -1;
-var h:heap(int) = 1..10;
+use Heap;
+use Sort;
+var h:heap(int, DefaultComparator) = 1..10;

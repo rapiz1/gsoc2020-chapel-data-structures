@@ -93,7 +93,7 @@ module Heap {
     */
     pragma "no doc"
     proc _commonInitFromIterable(iterable) {
-      _data = new list(int);
+      _data = new list(eltType);
       for x in iterable do
         _data.append(x);
       for i in 1 .. _data.size-1 by -1 {
@@ -331,7 +331,7 @@ module Heap {
       }
       _data(0) <=> _data(_data.size-1);
       _data.pop();
-      _heapify_down(1);
+      _heapify_down(0);
       _leave();
     }
   }

@@ -64,6 +64,13 @@ module Heap {
     }
   }
 
+  proc _checkType(type eltType) {
+    /*
+    if isNilableClass(eltType) then
+      compilerError("Cannot create heap with nilable type");
+      */
+  }
+    
   record heap {
 
     /* The type of the elements contained in this heap. */
@@ -92,7 +99,8 @@ module Heap {
       in O(N)
     */
     pragma "no doc"
-    proc _commonInitFromIterable(iterable) {
+    proc _commonInitFromIterable(iterable)
+    lifetime this < iterable {
       _data = new list(eltType);
       for x in iterable do
         _data.append(x);
@@ -112,6 +120,7 @@ module Heap {
       :type parSafe: `param bool`
     */
     proc init(type eltType, comparator: record = defaultComparator, param parSafe=false) {
+      _checkType(eltType);
       this.eltType = eltType;
       this.comparator = comparator;
       this.parSafe = parSafe;
@@ -125,6 +134,7 @@ module Heap {
       :arg other: The heap to initialize from.
     */
     proc init=(other: heap(this.type.eltType)) {
+      _checkType(this.type.eltType);
       if !isCopyableType(this.type.eltType) then
         compilerError("Cannot copy heap with element type that cannot be copied");
 
@@ -142,6 +152,7 @@ module Heap {
       :arg other: The list to initialize from.
     */
     proc init=(other: list(this.type.eltType, ?p)) {
+      _checkType(this.type.eltType);
       if !isCopyableType(this.type.eltType) then
         compilerError("Cannot copy list with element type that cannot be copied");
 
@@ -159,6 +170,7 @@ module Heap {
       :arg other: The array to initialize from.
     */
     proc init=(other: [?d] this.type.eltType) {
+      _checkType(this.type.eltType);
       if !isCopyableType(this.type.eltType) then
         compilerError("Cannot copy heap from array with element type that cannot be copied");
 
@@ -182,6 +194,7 @@ module Heap {
       :type other: `range(this.type.eltType)`
     */
     proc init=(other: range(this.type.eltType, ?b, ?d)) {
+      _checkType(this.type.eltType);
       this.eltType = this.type.eltType;
       this.comparator = new this.type.comparator();
       this.parSafe = this.type.parSafe;
@@ -254,7 +267,7 @@ module Heap {
       if (boundsChecking && isEmpty()) {
         boundsCheckHalt("Called \"heap.top\" on an empty heap.");
       }
-      var result = _data(0);
+      ref result = _data(0);
       _leave();
       return result;
     }
@@ -310,7 +323,8 @@ module Heap {
       :arg element: The element that will be pushed
       :type element: `eltType`
     */
-    proc push(element:eltType) {
+    proc push(in element:eltType)
+    lifetime this < element {
       _enter();
       _data.append(element);
       _heapify_up(_data.size-1);

@@ -267,7 +267,7 @@ module Heap {
       if (boundsChecking && isEmpty()) {
         boundsCheckHalt("Called \"heap.top\" on an empty heap.");
       }
-      ref result = _data(0);
+      var result = _data[0];
       _leave();
       return result;
     }

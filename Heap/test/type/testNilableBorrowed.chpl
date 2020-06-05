@@ -1,5 +1,5 @@
 use Heap;
-import HeapTest
+import HeapTest;
 
 var l = new heap(borrowed HeapTest.T?);
 

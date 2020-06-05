@@ -1,2 +1,4 @@
 Mason.lock
 **/target
+test.sh
+*.tmp

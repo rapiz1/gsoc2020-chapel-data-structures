@@ -182,35 +182,6 @@ module Heap {
     }
 
     /*
-      Initializes a heap containing elements that are copy initialized from
-      the elements yielded by a range.
-
-      .. note::
-
-        Attempting to initialize a heap from an unbounded range will trigger
-        a compiler error.
-
-      :arg other: The range to initialize from.
-      :type other: `range(this.type.eltType)`
-    */
-    proc init=(other: range(this.type.eltType, ?b, ?d)) {
-      _checkType(this.type.eltType);
-      this.eltType = this.type.eltType;
-      this.comparator = new this.type.comparator();
-      this.parSafe = this.type.parSafe;
-
-      if !isBoundedRange(other) {
-        param e = this.type:string;
-        param f = other.type:string;
-        param msg = "Cannot init " + e + " from unbounded " + f;
-        compilerError(msg);
-      }
-
-      this.complete();
-      _commonInitFromIterable(other);
-    }
-
-    /*
       Locks operations
     */
     pragma "no doc"
@@ -267,10 +238,16 @@ module Heap {
       if (boundsChecking && isEmpty()) {
         boundsCheckHalt("Called \"heap.top\" on an empty heap.");
       }
-      var result = _data[0];
-      _leave();
-      return result;
-    }
+      if (isOwnedClass(eltType)) {
+        var result = _data[0].borrow();
+        _leave();
+        return result;
+      }
+      else {
+        var result = _data[0];
+        _leave();
+        return result;
+      }
     }
 
     /*
@@ -375,26 +352,6 @@ module Heap {
   */
   proc makeHeap(x:list(?t), type comparator = DefaultComparator) {
     var h:heap(t, comparator) = x;
-    return h;
-  }
-  /*
-    Make a heap from a range
-
-    :arg x: The range to initialize the heap from.
-    :type x: `range`
-
-    :arg comparator: The comparator type
-
-    :rtype: heap(int, comparator)
-
-      .. note::
-
-        Attempting to initialize a heap from an unbounded range will trigger
-        a compiler error.
-
-  */
-  proc makeHeap(x:range, type comparator = DefaultComparator) {
-    var h:heap(int, comparator) = x;
     return h;
   }
   /*

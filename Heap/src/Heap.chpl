@@ -32,6 +32,7 @@ module Heap {
   import ChapelLocks;
   private use HaltWrappers;
   private use List;
+  private use IO;
 
   public use Sort only defaultComparator, DefaultComparator,
                        reverseComparator, ReverseComparator;
@@ -385,6 +386,17 @@ module Heap {
       }
       return l;
     }
+
+    /*
+      Write the contents of this list to a channel.
+
+      :arg ch: A channel to write to.
+    */
+    proc readWriteThis(ch: channel) throws {
+      _enter();
+      ch <~> this._data;
+      _leave();
+    }
   }
   /*
     Make a heap from a list.
@@ -396,8 +408,9 @@ module Heap {
 
     :rtype: heap(t, comparator)
   */
-  proc createHeap(x:list(?t), type comparator = DefaultComparator) {
-    var h:heap(t, comparator) = x;
+  proc createHeap(x:list(?t), comparator = defaultComparator) {
+    var h = new heap(t, comparator);
+    h._commonInitFromIterable(x);
     return h;
   }
   /*
@@ -410,8 +423,9 @@ module Heap {
 
     :rtype: heap(t, comparator)
   */
-  proc createHeap(x:[?d] ?t, type comparator = DefaultComparator) {
-    var h:heap(t, comparator) = x;
+  proc createHeap(x:[?d] ?t, comparator = defaultComparator) {
+    var h = new heap(t, comparator);
+    h._commonInitFromIterable(x);
     return h;
   }
 
@@ -424,6 +438,8 @@ module Heap {
     :return: A list containing all elements in the heap
     :rtype: `list(t)`
   */
+  //FIXME: No need for this as we have toArray and consume
+  /*
   proc popHeap(ref h:heap(?t)) {
     var l = new list(t);
     while (!h.isEmpty()) {
@@ -431,4 +447,5 @@ module Heap {
     }
     return l;
   }
+  */
 }

@@ -242,20 +242,18 @@ module Heap {
 
     */
     proc top() {
+      if (isOwnedClass(eltType)) {
+        compilerError("top() method is not avaliable on a 'heap'",
+                      " with elements of a owned type, here: ",
+                      eltType: string);
+      }
       _enter();
       if (boundsChecking && isEmpty()) {
         boundsCheckHalt("Called \"heap.top\" on an empty heap.");
       }
-      if (isOwnedClass(eltType)) {
-        var result = _data[0].borrow();
-        _leave();
-        return result;
-      }
-      else {
-        var result = _data[0];
-        _leave();
-        return result;
-      }
+      var result = _data[0];
+      _leave();
+      return result;
     }
 
     /*
@@ -332,21 +330,21 @@ module Heap {
     }
 
     /*
-      Pop an element.
+      Pop an element and return it.
 
-        .. note::
-          This procedure does not return the element.
-
+      :return: the top element
+      :rtype: eltType
     */
-    proc pop() {
+    proc pop() eltType {
       _enter();
       if (boundsChecking && isEmpty()) {
         boundsCheckHalt("Called \"heap.pop\" on an empty heap.");
       }
       _data(0) <=> _data(_data.size-1);
-      _data.pop();
+      var ret = _data.pop();
       _heapify_down(0);
       _leave();
+      return ret;
     }
 
     /*

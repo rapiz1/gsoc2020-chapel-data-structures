@@ -310,6 +310,28 @@ module Heap {
     }
 
     /*
+      Push elements of a list into the heap
+
+      :arg x: The list of which elements is to push.
+      :type x: `list(eltType)`
+    */
+    proc push(ref x: list(eltType)) {
+      for e in x do
+        push(e);
+    }
+
+    /*
+      Push elements in an array into a heap.
+
+      :arg x: The array of which elements is to push.
+      :type x: `[?d] eltType`
+    */
+    proc push(ref x:[?d] eltType) {
+      for e in x do
+        push(e);
+    }
+
+    /*
       Pop an element.
 
         .. note::
@@ -367,46 +389,6 @@ module Heap {
   proc createHeap(x:[?d] ?t, type comparator = DefaultComparator) {
     var h:heap(t, comparator) = x;
     return h;
-  }
-
-  /*
-    Push elements of a list into a heap.
-
-    :arg x: The list of which elements is to push.
-    :type x: `list(?t)`
-
-    :arg h: The heap to push
-    :type h: `heap(t)`
-  */
-  proc pushHeap(x:list(?t), ref h:heap(t)) {
-    for e in x do
-      h.push(e);
-  }
-  /*
-    Push elements in a range into a heap.
-
-    :arg x: The range of which elements is to push.
-    :type x: `range`
-
-    :arg h: The heap to push
-    :type h: `heap(int)`
-  */
-  proc pushHeap(x:range, ref h:heap(int)) {
-    for e in x do
-      h.push(e);
-  }
-  /*
-    Push elements in an array into a heap.
-
-    :arg x: The array of which elements is to push.
-    :type x: `[?d]?t`
-
-    :arg h: The heap to push
-    :type h: `heap(t)`
-  */
-  proc pushHeap(x:[?d] ?t, ref h:heap(t)) {
-    for e in x do
-      h.push(e);
   }
 
   /*

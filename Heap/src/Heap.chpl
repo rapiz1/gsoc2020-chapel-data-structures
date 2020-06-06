@@ -335,7 +335,7 @@ module Heap {
       :return: the top element
       :rtype: eltType
     */
-    proc pop() eltType {
+    proc pop(): eltType {
       _enter();
       if (boundsChecking && isEmpty()) {
         boundsCheckHalt("Called \"heap.pop\" on an empty heap.");

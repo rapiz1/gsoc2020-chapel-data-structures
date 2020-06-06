@@ -71,14 +71,6 @@ module Heap {
       */
   }
     
-  /*
-    Wrapper of comparing elements
-  */
-  pragma "no doc"
-  proc _greater(x:eltType, y:eltType) {
-    return chpl_compare(x, y, comparator) > 0;
-  }
-
   record heap {
 
     /* The type of the elements contained in this heap. */
@@ -254,6 +246,14 @@ module Heap {
       var result = _data[0];
       _leave();
       return result;
+    }
+
+    /*
+      Wrapper of comparing elements
+    */
+    pragma "no doc"
+    proc _greater(x:eltType, y:eltType) {
+      return chpl_compare(x, y, comparator) > 0;
     }
 
     /*

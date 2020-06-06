@@ -350,7 +350,7 @@ module Heap {
 
     :rtype: heap(t, comparator)
   */
-  proc makeHeap(x:list(?t), type comparator = DefaultComparator) {
+  proc createHeap(x:list(?t), type comparator = DefaultComparator) {
     var h:heap(t, comparator) = x;
     return h;
   }
@@ -364,7 +364,7 @@ module Heap {
 
     :rtype: heap(t, comparator)
   */
-  proc makeHeap(x:[?d] ?t, type comparator = DefaultComparator) {
+  proc createHeap(x:[?d] ?t, type comparator = DefaultComparator) {
     var h:heap(t, comparator) = x;
     return h;
   }

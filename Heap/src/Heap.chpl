@@ -359,6 +359,32 @@ module Heap {
         yield e;
       }
     }
+
+    proc const toArray(): [] eltType {
+      if isCopyableType(eltType) then
+        compilerError("toArray() method is not avaliable on a 'heap'",
+                      " with elements of a type that can't be copied, here: ",
+                      eltType: string);
+      var l: [0..#size] eltType;
+      for i in 0..#size {
+        l[i] = _data[i];
+      }
+      return l;
+    }
+
+    /*
+      Returns a new DefaultRectangular array containing the
+      elements contained in this heap. The heap will be empty.
+
+      :return: A new DefaultRectangular array.
+    */
+    proc consume(): [] eltType {
+      var l: [0..#size] eltType;
+      for i in 0..#size {
+        l[i] = pop();
+      }
+      return l;
+    }
   }
   /*
     Make a heap from a list.
@@ -401,8 +427,7 @@ module Heap {
   proc popHeap(ref h:heap(?t)) {
     var l = new list(t);
     while (!h.isEmpty()) {
-      l.append(h.top());
-      h.pop();
+      l.append(h.pop());
     }
     return l;
   }

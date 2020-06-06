@@ -262,7 +262,7 @@ module Heap {
         the heap will return the minimal element.
 
     */
-    proc top(): eltType {
+    proc top() {
       _enter();
       if (boundsChecking && isEmpty()) {
         boundsCheckHalt("Called \"heap.top\" on an empty heap.");
@@ -270,6 +270,7 @@ module Heap {
       var result = _data[0];
       _leave();
       return result;
+    }
     }
 
     /*
@@ -347,6 +348,19 @@ module Heap {
       _data.pop();
       _heapify_down(0);
       _leave();
+    }
+
+    /*
+      Iterate over the elements of this heap
+
+        .. note::
+          Elements in the heap is not sorted
+
+    */
+    iter these() ref {
+      for e in _data {
+        yield e;
+      }
     }
   }
   /*

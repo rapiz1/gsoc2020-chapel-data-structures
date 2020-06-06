@@ -6,11 +6,14 @@ proc C.deinit() { writeln("deinit: " + x:string); }
 proc <(left: C, right: C) {
   return left.x < right.x;
 }
+proc >(left: C, right: C) {
+  return left.x > right.x;
+}
 
 proc test() {
-  var hp1: heap((shared C, shared C));
-  var hp2: heap((shared C, shared C));
-  var hp3: heap(shared C);
+  var hp1 = new heap((shared C, shared C));
+  var hp2 = new heap((shared C, shared C));
+  var hp3 = new heap(shared C);
 
   for i in 1..8 {
     var item = (new shared C(i), new shared C(-i));
@@ -22,7 +25,8 @@ proc test() {
   writeln('---');
 
   while !hp1.isEmpty() {
-    hp2.push(hp1.pop());
+    hp2.push(hp1.top());
+    hp1.pop();
   }
 
   writeln(hp1.size:string);
@@ -30,7 +34,8 @@ proc test() {
   for item in hp2 do writeln(item);
 
   while !hp2.isEmpty() {
-    var (a, b) = hp2.pop();
+    var (a, b) = hp2.top();
+    hp2.pop();
     hp3.push(a);
     hp3.push(b);
   }

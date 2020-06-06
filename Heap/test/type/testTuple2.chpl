@@ -1,31 +1,24 @@
-/*
-  What's the intent of this test
-  since there is already testTuple1?
-  Also why sets the default value to 0?
-*/
-/*
-import List.list;
-
-class C { var x: int = 0; }
+use Heap;
+import HeapTest;
 
 proc test() {
-  var lst: list((shared C, shared C));
+  var hp = new heap((shared HeapTest.T, shared HeapTest.T));
 
   for i in 1..8 {
-    var item = (new shared C(i), new shared C(-i));
-    lst.append(item);
+    var item = (new shared HeapTest.T(i), new shared HeapTest.T(-i));
+    hp.push(item);
   }
 
-  writeln(lst.size:string);
+  writeln(hp.size:string);
 
-  for item in lst do writeln(item);
+  for item in hp do writeln(item);
 
-  while !lst.isEmpty() {
-    var item = lst.pop();
+  while !hp.isEmpty() {
+    var item = hp.top();
+    hp.pop();
     writeln(item);
   }
 
   return;
 }
 test();
-*/

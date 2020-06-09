@@ -105,7 +105,7 @@ module Heap {
       _data = new list(eltType);
       for x in iterable do
         _data.append(x);
-      for i in 1 .. _data.size-1 by -1 {
+      for i in 0 .. _data.size-1 by -1 {
         _heapify_down(i);
       }
     }

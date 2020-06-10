@@ -362,7 +362,7 @@ module Heap {
     }
 
     proc const toArray(): [] eltType {
-      if isCopyableType(eltType) then
+      if !isCopyableType(eltType) then
         compilerError("toArray() method is not avaliable on a 'heap'",
                       " with elements of a type that can't be copied, here: ",
                       eltType: string);

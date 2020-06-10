@@ -32,6 +32,7 @@ module Heap {
   import ChapelLocks;
   private use HaltWrappers;
   private use List;
+  private use IO;
 
   public use Sort only defaultComparator, DefaultComparator,
                        reverseComparator, ReverseComparator;
@@ -71,14 +72,6 @@ module Heap {
       */
   }
     
-  /*
-    Wrapper of comparing elements
-  */
-  pragma "no doc"
-  proc _greater(x:eltType, y:eltType) {
-    return chpl_compare(x, y, comparator) > 0;
-  }
-
   record heap {
 
     /* The type of the elements contained in this heap. */
@@ -112,7 +105,7 @@ module Heap {
       _data = new list(eltType);
       for x in iterable do
         _data.append(x);
-      for i in 1 .. _data.size-1 by -1 {
+      for i in 0 .. _data.size-1 by -1 {
         _heapify_down(i);
       }
     }
@@ -257,6 +250,14 @@ module Heap {
     }
 
     /*
+      Wrapper of comparing elements
+    */
+    pragma "no doc"
+    proc _greater(x:eltType, y:eltType) {
+      return chpl_compare(x, y, comparator) > 0;
+    }
+
+    /*
       helper procs to maintain the heap
     */
     pragma "no doc"
@@ -335,7 +336,7 @@ module Heap {
       :return: the top element
       :rtype: eltType
     */
-    proc pop() eltType {
+    proc pop(): eltType {
       _enter();
       if (boundsChecking && isEmpty()) {
         boundsCheckHalt("Called \"heap.pop\" on an empty heap.");
@@ -361,7 +362,7 @@ module Heap {
     }
 
     proc const toArray(): [] eltType {
-      if isCopyableType(eltType) then
+      if !isCopyableType(eltType) then
         compilerError("toArray() method is not avaliable on a 'heap'",
                       " with elements of a type that can't be copied, here: ",
                       eltType: string);
@@ -385,6 +386,17 @@ module Heap {
       }
       return l;
     }
+
+    /*
+      Write the contents of this list to a channel.
+
+      :arg ch: A channel to write to.
+    */
+    proc readWriteThis(ch: channel) throws {
+      _enter();
+      ch <~> this._data;
+      _leave();
+    }
   }
   /*
     Make a heap from a list.
@@ -396,8 +408,9 @@ module Heap {
 
     :rtype: heap(t, comparator)
   */
-  proc createHeap(x:list(?t), type comparator = DefaultComparator) {
-    var h:heap(t, comparator) = x;
+  proc createHeap(x:list(?t), comparator = defaultComparator) {
+    var h = new heap(t, comparator);
+    h._commonInitFromIterable(x);
     return h;
   }
   /*
@@ -410,8 +423,9 @@ module Heap {
 
     :rtype: heap(t, comparator)
   */
-  proc createHeap(x:[?d] ?t, type comparator = DefaultComparator) {
-    var h:heap(t, comparator) = x;
+  proc createHeap(x:[?d] ?t, comparator = defaultComparator) {
+    var h = new heap(t, comparator);
+    h._commonInitFromIterable(x);
     return h;
   }
 
@@ -424,6 +438,8 @@ module Heap {
     :return: A list containing all elements in the heap
     :rtype: `list(t)`
   */
+  //FIXME: No need for this as we have toArray and consume
+  /*
   proc popHeap(ref h:heap(?t)) {
     var l = new list(t);
     while (!h.isEmpty()) {
@@ -431,4 +447,5 @@ module Heap {
     }
     return l;
   }
+  */
 }

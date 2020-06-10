@@ -50,3 +50,20 @@ proc testHeap(type t) {
   }
 
 }
+
+proc testHeapOwned(type t) {
+  var l = new heap(t);
+
+  var x: t = new t(1);
+
+  l.push(x);
+  assert(l.size == 1);
+
+  var value = l.pop();
+  assert(l.size == 0);
+
+  if isUnmanagedClass(t) {
+    delete x;
+  }
+
+}

@@ -27,6 +27,7 @@ module Vector {
   import ChapelLocks;
   private use HaltWrappers;
   private use Sort;
+  private use List;
 
   pragma "no doc"
   private const _initialCapacity = 8;
@@ -59,13 +60,24 @@ module Vector {
   private use IO;
 
   record vector {
+    type eltType;
     param parSafe = false;
 
-    type eltType;
 
-    var size = 0;
-    var capacity = 0;
-    var _data [] eltType = nil;
+    pragma "no doc"
+    var _size = 0;
+
+    pragma "no doc"
+    var _capacity = 0;
+
+    pragma "no doc"
+    var _domain = {0..#_initialCapacity};
+
+    pragma "no doc"
+    var _data: [_domain] eltType;
+
+    pragma "no doc"
+    var _lock$ = if parSafe then new _LockWrapper() else none;
 
     proc init(type eltType, param parSafe=false) {
       this.eltType = eltType;
@@ -74,7 +86,7 @@ module Vector {
     }
     proc init=(other: list(this.type.eltType)) {
       if !isCopyableType(this.type.eltType) then
-        compilerError("Cannot copy list with element type that " +
+        compilerError("Cannot copy vector with element type that " +
                       "cannot be copied");
 
       this.eltType = this.type.eltType;
@@ -86,18 +98,18 @@ module Vector {
     }
     proc init=(other: [?d] this.type.eltType) {
       if !isCopyableType(this.type.eltType) then
-        compilerError("Cannot copy list with element type that " +
+        compilerError("Cannot copy vector with element type that " +
                       "cannot be copied");
       this.eltType = this.type.eltType;
       this.parSafe = this.type.parSafe;
       this.complete();
 
-      _requestCapacity(#d);
+      _requestCapacity(d.size);
       _commonInitFromIterable(other);
     }
     proc init=(other: vector(this.type.eltType)) {
       if !isCopyableType(this.type.eltType) then
-        compilerError("Cannot copy list with element type that " +
+        compilerError("Cannot copy vector with element type that " +
                       "cannot be copied");
       this.eltType = this.type.eltType;
       this.parSafe = this.type.parSafe;
@@ -128,8 +140,35 @@ module Vector {
 
     pragma "no doc"
     proc ref _append(x: eltType) {
-      _requestCapacity(size+1);
-      _data[size++] = x;
+      _requestCapacity(_size+1);
+      _data[_size] = x;
+      _size += 1;
+    }
+
+    /*
+      The current number of elements contained in this vector.
+    */
+    inline proc const size {
+      var result = 0;
+
+      _enter();
+      result = _size;
+      _leave();
+
+      return result;
+    }
+
+    /*
+      The the capacity of this vector.
+    */
+    inline proc const capacity {
+      var result = 0;
+
+      _enter();
+      result = _capacity;
+      _leave();
+
+      return result;
     }
 
     /*
@@ -218,10 +257,15 @@ module Vector {
         boundsCheckHalt("Called \"vector.last\" on an empty vector.");
       }
      
-      ref result = _data[size-1];
+      ref result = _data[_size-1];
       _leave();
 
       return result;  
+    }
+
+    pragma "no doc"
+    inline proc const _withinBounds(idx: int): bool {
+      return (idx >= 0 && idx < _size);
     }
 
     /*
@@ -229,74 +273,667 @@ module Vector {
 
       :returns: if succeed
     */
-    //TODO:
-    proc insert(idx: int, in x:eltType): bool {}
+    proc ref insert(idx: int, x:eltType): bool {
+      var result = false;
+      _enter();
+      if (idx == _size) {
+        _append(x);
+        result = true;
+      }
+      else if _withinBounds(idx) {
+        _expand(idx);
+        _data[idx] = x;
+        _size += 1;
+        result = true;
+      }
+      _leave();
+      return result;
+    }
+
+    //
+    // Shift elements including and after index `idx` so that they are moved
+    // `shift` positions to the right in memory, possibly resizing. May
+    // expand memory if necessary.
+    //
+    pragma "no doc"
+    proc ref _expand(idx: int, shift: int=1) {
+      _sanity(_withinBounds(idx));
+
+      if shift <= 0 then
+        return;
+
+      _requestCapacity(_size + shift);
+
+      for i in idx.._size-1 by -1 {
+        _data[i+shift] = _data[i];
+      }
+      return;
+    }
+
+    pragma "no doc"
+    proc ref _insertGenericKnownSize(idx: int, items, size: int): bool {
+      var result = false;
+
+      if size == 0 then
+        return true;
+
+      _requestCapacity(_size + size);
+      if idx == _size {
+        _extendGeneric(items);
+        result = true;
+      } else if _withinBounds(idx) {
+        _expand(idx, size);
+
+        var i = idx;
+        for x in items {
+          _data[i] = x;
+          _size += 1;
+          i += 1;
+        }
+
+        result = true;
+      }
+
+      return result;
+    }
 
     /*
-      Erase an element at a give position
+      Insert an array of elements `arr` into this vector at index `idx`,
+      shifting all elements at and following the index `arr.size` positions
+      to the right. 
+
+      If the insertion is successful, this method returns `true`. If the given
+      index is out of bounds, this method does nothing and returns `false`.
+
+      .. warning::
+
+        Inserting elements into this vector may invalidate existing references
+        to the elements contained in this vector.
+
+      :arg idx: The index into this vector at which to insert.
+      :type idx: `int`
+
+      :arg arr: An array of elements to insert.
+      :type x: `[] eltType`
+
+      :return: `true` if `arr` was inserted, `false` otherwise.
+      :rtype: `bool`
     */
-    //TODO:
-    proc erase(pos: int) {}
+    proc ref insert(idx: int, arr: [?d] eltType): bool lifetime this < arr {
+
+      var result = false;
+
+      _enter();
+      result = _insertGenericKnownSize(idx, arr, arr.size);
+      _leave();
+
+      return result;
+    }
+
+    /*
+      Insert a list of elements `lst` into this vector at index `idx`, shifting
+      all elements at and following the index `lst.size` positions to the
+      right.
+
+      If the insertion is successful, this method returns `true`. If the given
+      index is out of bounds, this method does nothing and returns `false`.
+
+      .. warning::
+
+        Inserting elements into this vector may invalidate existing references
+        to the elements contained in this vector.
+
+      :arg idx: The index into this vector at which to insert.
+      :type idx: `int`
+
+      :arg lst: A list of elements to insert.
+      :type lst: `list(eltType)`
+
+      :return: `true` if `lst` was inserted, `false` otherwise.
+      :rtype: `bool`
+    */
+    proc ref insert(idx: int, lst: list(eltType)): bool lifetime this < lst {
+      
+      var result = false;
+      
+      // Prevent deadlock if we are trying to insert this into itself.
+      // Who want to do that?
+      const size = lst.size;
+
+      on this {
+        _enter();
+        result = _insertGenericKnownSize(idx, lst, size);
+        _leave();
+      }
+
+      return result;
+    }
+
+    /*
+      Insert a vector of elements `vec` into this vector at index `idx`, shifting
+      all elements at and following the index `vec.size` positions to the
+      right.
+
+      If the insertion is successful, this method returns `true`. If the given
+      index is out of bounds, this method does nothing and returns `false`.
+
+      .. warning::
+
+        Inserting elements into this vector may invalidate existing references
+        to the elements contained in this vector.
+
+      :arg idx: The index into this vector at which to insert.
+      :type idx: `int`
+
+      :arg lst: A vector of elements to insert.
+      :type lst: `vector(eltType)`
+
+      :return: `true` if `vec` was inserted, `false` otherwise.
+      :rtype: `bool`
+    */
+    proc ref insert(idx: int, vec: vector(eltType)): bool lifetime this < vec {
+      
+      var result = false;
+      
+      // Prevent deadlock if we are trying to insert this into itself.
+      const size = vec.size;
+
+      on this {
+        _enter();
+        result = _insertGenericKnownSize(idx, vec, size);
+        _leave();
+      }
+
+      return result;
+    }
+
+    /*
+      Remove the first `count` elements from this vector with values equal to
+      `x`, shifting all elements following the removed item left.
+
+      If the count of elements to remove is less than or equal to zero, then
+      all elements from this vector equal to the value of `x` will be removed.
+
+      .. warning::
+
+        Removing elements from this vector may invalidate existing references
+        to the elements contained in this vector.
+
+      :arg x: The value of the element to remove.
+      :type x: `eltType`
+
+      :arg count: The number of elements to remove.
+      :type count: `int`
+
+      :return: The number of elements removed.
+      :rtype: `int`
+    */
+    proc ref remove(x: eltType, count:int=1): int {
+      var result = 0;
+
+      on this {
+        var src_i, dst_i: int;
+        var removed = 0;
+        src_i = 0;
+
+        _enter();
+
+        // Run through the leading non-x prefix
+        while dst_i < _size {
+          if _data[dst_i] == x {
+            removed += 1;
+            break;
+          }
+          dst_i += 1;
+        }
+
+        // Once we've found an x, everything after has to be _move()d.
+        // Run src_i ahead, moving everything that isn't x back to dst_i.
+        src_i = dst_i + 1;
+        while src_i < _size {
+          if (count == 0 || removed < count) && _data[src_i] == x {
+            src_i += 1;
+            removed += 1;
+            continue;
+          }
+          _data[dst_i] = _data[src_i];
+          src_i += 1;
+          dst_i += 1;
+        }
+
+        if (removed) {
+          _size = _size - removed;
+        }
+
+        _leave();
+
+        result = removed;
+      }
+
+      return result;
+    }
+
+    pragma "no doc"
+    proc ref _popAtIndex(idx: int, unlockBeforeHalt=true): eltType {
+
+      if boundsChecking && _size <= 0 {
+        if unlockBeforeHalt then
+          _leave();
+        boundsCheckHalt("Called \"vector.pop\" on an empty vector.");
+      }
+
+      if boundsChecking && !_withinBounds(idx) {
+        if unlockBeforeHalt then
+          _leave();
+        const msg = "Index for \"vector.pop\" out of bounds: " + idx:string;
+        boundsCheckHalt(msg);
+      }
+
+      var result = _data[idx];
+      _shift(idx);
+      _size -= 1;
+      _maybeDecreaseCapacity();
+
+      return result;
+    }
+
+    /*
+      Remove the element at the end of this vector and return it.
+
+      .. warning::
+
+        Popping an element from this vector will invalidate any reference to
+        the element taken while it was contained in this vector.
+
+      .. warning::
+
+        Calling this method on an empty vector will cause the currently running
+        program to halt. If the `--fast` flag is used, no safety checks will
+        be performed.
+
+      :return: The element popped.
+      :rtype: `eltType`
+    */
+    proc ref pop(): eltType {
+      _enter();
+      var result = _popAtIndex(_size-1);
+      _leave();
+      return result;
+    }
+
+    /*
+      Remove the element at the index `idx` from this vector and return it. The
+      elements at indices after `idx` are shifted one to the left in memory,
+      making this operation O(n).
+
+      :arg idx: The index of the element to remove.
+      :type idx: `int`
+
+      :return: The element popped.
+      :rtype: `eltType`
+    */
+    proc ref pop(idx: int): eltType {
+      _enter();
+      var result = _popAtIndex(idx);
+      _leave();
+      return result;
+    }
+
+    /*
+      Clear the contents of this vector.
+
+      .. warning::
+
+        Clearing the contents of this vector will invalidate all existing
+        references to the elements contained in this vector.
+    */
+    proc ref clear() {
+      on this {
+        _enter();
+
+        _size = 0;
+        _capacity = _initialCapacity;
+        _maybeDecreaseCapacity();
+
+        _leave();
+      }
+    }
+
+    /*
+      Return a zero-based index into this vector of the first item whose value
+      is equal to `x`. If no such element can be found this method returns
+      the value `-1`.
+
+      .. warning::
+
+        Calling this method on an empty vector or with values of `start` or 
+        `end` that are out of bounds will cause the currently running program
+        to halt. If the `--fast` flag is used, no safety checks will be
+        performed.
+
+      :arg x: An element to search for.
+      :type x: `eltType`
+
+      :arg start: The start index to start searching from.
+      :type start: `int`
+
+      :arg end: The end index to stop searching at. A value less than
+                `0` will search the entire vector.
+      :type end: `int`
+
+      :return: The index of the element to search for, or `-1` on error.
+      :rtype: `int`
+    */
+    proc const indexOf(x: eltType, start: int=0, end: int=-1): int {
+      if boundsChecking {
+        const msg = " index for \"vector.indexOf\" out of bounds: ";
+
+        if end >= 0 && !_withinBounds(end) then
+          boundsCheckHalt("End" + msg + end:string);
+
+        if !_withinBounds(start) then
+          boundsCheckHalt("Start" + msg + start:string);
+      }
+
+      param error = -1;
+
+      if end >= 0 && end < start then
+        return error;
+
+      var result = error;
+
+      on this {
+        _enter();
+
+        const stop = if end < 0 then _size-1 else end;
+
+        for i in start..stop do
+          if x == _data[i] {
+            result = i;
+            break;
+          }
+
+        _leave();
+      }
+
+      return result;
+    }
+
+    /*
+      Return the number of times a given element is found in this vector.
+
+      :arg x: An element to count.
+      :type x: `eltType`
+
+      :return: The number of times a given element is found in this vector.
+      :rtype: `int`
+    */
+    proc const count(x: eltType): int {
+      var result = 0;
+
+      on this {
+        _enter();
+
+        var count = 0;
+
+        for item in this do
+          if x == item then
+            count += 1;
+
+        result = count;
+
+        _leave();
+      }
+
+      return result;
+    }
+
+    /*
+      Sort the items of this vector in place using a comparator. If no comparator
+      is provided, sort this vector using the default sort order of its elements.
+
+      .. warning::
+
+        Sorting the elements of this vector may invalidate existing references
+        to the elements contained in this vector.
+
+      :arg comparator: A comparator used to sort this vector.
+    */
+    proc ref sort(comparator: ?rec=Sort.defaultComparator) {
+      on this {
+        _enter();
+
+        //
+        // TODO: This is not ideal, but the Sort API needs to be adjusted
+        // before we can sort over vectors directly.
+        //
+        if _size > 1 {
+
+          // Copy current vector contents into an array.
+          var arr: [0..#_size] eltType;
+          for i in 0..#_size do
+            arr[i] = this[i];
+
+          Sort.sort(arr, comparator);
+
+          // This is equivalent to the clear routine.
+          _size = 0;
+          _capacity = _initialCapacity;
+
+          _requestCapacity(arr.size);
+          _extendGeneric(arr);
+          _maybeDecreaseCapacity();
+        }
+        
+        _leave();
+      }
+      return;
+    }
 
     pragma "no doc"
     proc _requestCapacity(newCap: int) {
-      if (capacity >= newCap) return;
-      if (capacity == 0) {
-        capacity = _initialCapacity;
+      if (_capacity >= newCap) then return;
+      if (_capacity == 0) {
+        _capacity = _initialCapacity;
       }
-      while (capacity < newCap) {
-        capacity *= 2;
+      while (_capacity < newCap) {
+        _capacity *= 2;
       }
 
-      var ndata = new [capacity] eltType;
-      if (_data != nil) {
-        for i in 0..#this.size {
-          ndata[i] = _data[i];
-        }
-      }
-      _data = ndata;
+      _domain = {0..#_capacity};
     }
 
+    pragma "no doc"
+    proc _maybeDecreaseCapacity() {
+
+      const threshold = _capacity/2;
+
+      if threshold <= _initialCapacity then
+        return;
+
+      if size > threshold then
+        return;
+
+      capacity /= 2; 
+      _domain = {0..#capacity};
+    }
     /*
       Request a change in capacity
     */
     proc requestCapacity(newCapacaity: int) {
       _enter();
-      _requestCapacity(size);
+      _requestCapacity(newCapacaity);
+      _leave();
+    }
+
+    pragma "no doc"
+    inline proc ref _extendGeneric(collection) {
+      for item in collection {
+        _append(item);
+      }
+    }
+
+    /*
+      Extend this vector by appending a copy of each element contained in
+      another list.
+
+      :arg other: A list containing elements of the same type as those
+        contained in this vector.
+      :type other: `list(eltType)`
+    */
+    proc ref extend(other: vector(eltType, ?p)) lifetime this < other {
+        _enter();
+        _requestCapacity(_size + other.size);
+        _extendGeneric(other);
+        _leave();
+    }
+
+    /*
+      Extend this vector by appending a copy of each element contained in an
+      array.
+
+      :arg other: An array containing elements of the same type as those
+        contained in this vector.
+      :type other: `[?d] eltType`
+    */
+    proc ref extend(other: [?d] eltType) lifetime this < other {
+      _enter();
+      _requestCapacity(_size + d.size);
+      _extendGeneric(other);
       _leave();
     }
 
     /*
-      Extend this list by appending a copy of each element contained in
-      another list.
+      Extends this vector by appending a copy of each element yielded by a
+      range.
 
-      :arg other: A list containing elements of the same type as those
-        contained in this list.
-      :type other: `list(eltType)`
+      .. note::
+
+        Attempting to initialize a vector from an unbounded range will trigger
+        a compiler error.
+
+      :arg other: The range to initialize from.
+      :type other: `range(eltType)`
     */
-    proc ref extend(other: list(eltType, ?p)) lifetime this < other {
-      //TODO:
-      //FIXME: More overloads of extend
+    proc ref extend(other: range(eltType, ?b, ?d)) lifetime this < other {
+      if !isBoundedRange(other) {
+        param e = this.type:string;
+        param f = other.type:string;
+        param msg = "Cannot extend " + e + " with unbounded " + f;
+        compilerError(msg);
+      }
+
+      _enter();
+      _extendGeneric(other.size);
+      _leave();
     }
-    /*
-      Pop the element at the end
-    */
-    //TODO:
-    proc pop(): eltType {}
 
     /*
-      Append an element at the end
+      Iterate over the elements of this vector.
+
+      :yields: A reference to one of the elements contained in this vector.
     */
-    //TODO:
-    proc push(in x: eltType) {}
+    iter these() ref {
+      for i in 0..#_size {
+        yield _data[i];
+      }
+    }
 
     /*
-      Returns a new DefaultRectangular array containing a copy of each of the elements contained in this vector.
-    */
-    //TODO:
-    proc toArray(): [] eltType {}
+      Index this vector via subscript. Returns a reference to the element at a
+      given index in this vector.
 
-    //TODO:
-    iter these() ref {}
+      :arg i: The index of the element to access.
+
+      .. warning::
+
+        Use of the `this` method with an out of bounds index (while bounds
+        checking is on) will cause the currently running program to halt.
+
+      :return: An element from this vector.
+    */
+    proc ref this(i: int) ref {
+      if boundsChecking && !_withinBounds(i) {
+        const msg = "Invalid vector index: " + i:string;
+        boundsCheckHalt(msg);
+      }
+
+      return _data[i];
+    }
+    proc const ref this(i: int) const ref {
+      if boundsChecking && !_withinBounds(i) {
+        const msg = "Invalid vector index: " + i:string;
+        boundsCheckHalt(msg);
+      }
+
+      return _data[i];
+    }
+
+    /*
+      Write the contents of this vector to a channel.
+
+      :arg ch: A channel to write to.
+    */
+    proc readWriteThis(ch: channel) throws {
+      _enter();
+      
+      ch <~> "[";
+
+      for i in 0..(_size - 2) do
+        ch <~> _data[i] <~> ", ";
+
+      if _size > 0 then
+        ch <~> _data[_size-1];
+
+      ch <~> "]";
+
+      _leave();
+    }
+
+    /*
+      Returns `true` if this vector contains zero elements.
+
+      :return: `true` if this vector is empty.
+      :rtype: `bool`
+    */
+    proc const isEmpty(): bool {
+
+      _enter();
+      var result = (_size == 0);
+      _leave();
+      return result;
+    }
+
+    /*
+      Returns the vector's legal indices as the range ``0..<this.size``.
+
+      :return: ``0..<this.size``
+      :rtype: `range`
+    */
+    proc const indices {
+      return 0..<this.size;
+    }
+
+    /*
+      Returns a new DefaultRectangular array containing a copy of each of the
+      elements contained in this vector.
+
+      :return: A new DefaultRectangular array.
+    */
+    proc const toArray(): [] eltType {
+      if isNonNilableClass(eltType) && isOwnedClass(eltType) then
+        compilerError("toArray() method is not available on a 'vector'",
+                      " with elements of a non-nilable owned type, here: ",
+                      eltType:string);
+
+      _enter();
+
+      var result: [0..#_size] eltType =
+        forall i in 0..#_size do _data[i];
+
+      _leave();
+
+      return result;
+    }
   }
 }

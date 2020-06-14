@@ -20,7 +20,7 @@
 /*
   This module contains the implementation of the vector type.
 
-  Vector is a kind of list storing elements in a contiguous area
+  Vector is a kind of list storing elements in a contiguous area.
 */
 module Vector {
 
@@ -60,7 +60,9 @@ module Vector {
   private use IO;
 
   record vector {
+    /* The type of the elements contained in this vector. */
     type eltType;
+    /* If `true`, this vector will perform parallel safe operations. */
     param parSafe = false;
 
 
@@ -79,11 +81,26 @@ module Vector {
     pragma "no doc"
     var _lock$ = if parSafe then new _LockWrapper() else none;
 
+    /*
+      Initializes an empty list.
+
+      :arg eltType: The type of the elements of this list.
+
+      :arg parSafe: If `true`, this list will use parallel safe operations.
+      :type parSafe: `param bool`
+    */
     proc init(type eltType, param parSafe=false) {
       this.eltType = eltType;
       this.parSafe = parSafe;
       this.complete();
     }
+
+    /*
+      Initializes a vector containing elements that are copy initialized from
+      the elements contained in another list.
+
+      :arg other: The list to initialize from.
+    */
     proc init=(other: list(this.type.eltType)) {
       if !isCopyableType(this.type.eltType) then
         compilerError("Cannot copy vector with element type that " +
@@ -96,6 +113,13 @@ module Vector {
       _requestCapacity(other.size);
       _commonInitFromIterable(other);
     }
+
+    /*
+      Initializes a vector containing elements that are copy initialized from
+      the elements contained in an array.
+
+      :arg other: The array to initialize from.
+    */
     proc init=(other: [?d] this.type.eltType) {
       if !isCopyableType(this.type.eltType) then
         compilerError("Cannot copy vector with element type that " +
@@ -107,6 +131,13 @@ module Vector {
       _requestCapacity(d.size);
       _commonInitFromIterable(other);
     }
+
+    /*
+      Initializes a vector containing elements that are copy initialized from
+      the elements contained in another vector.
+
+      :arg other: The vector to initialize from.
+    */
     proc init=(other: vector(this.type.eltType)) {
       if !isCopyableType(this.type.eltType) then
         compilerError("Cannot copy vector with element type that " +
@@ -151,9 +182,11 @@ module Vector {
     inline proc const size {
       var result = 0;
 
-      _enter();
-      result = _size;
-      _leave();
+      on this {
+        _enter();
+        result = _size;
+        _leave();
+      }
 
       return result;
     }
@@ -198,15 +231,17 @@ module Vector {
     proc const contains(x: eltType): bool {
       var result = false;
 
-      _enter();
+      on this {
+        _enter();
 
-      for item in this do
-        if item == x {
-          result = true;
-          break;
-        }
+        for item in this do
+          if item == x {
+            result = true;
+            break;
+          }
 
-      _leave();
+        _leave();
+      }
 
       return result;
     }
@@ -275,18 +310,20 @@ module Vector {
     */
     proc ref insert(idx: int, x:eltType): bool {
       var result = false;
-      _enter();
-      if (idx == _size) {
-        _append(x);
-        result = true;
+      on this {
+        _enter();
+        if (idx == _size) {
+          _append(x);
+          result = true;
+        }
+        else if _withinBounds(idx) {
+          _expand(idx);
+          _data[idx] = x;
+          _size += 1;
+          result = true;
+        }
+        _leave();
       }
-      else if _withinBounds(idx) {
-        _expand(idx);
-        _data[idx] = x;
-        _size += 1;
-        result = true;
-      }
-      _leave();
       return result;
     }
 
@@ -302,10 +339,12 @@ module Vector {
       if shift <= 0 then
         return;
 
-      _requestCapacity(_size + shift);
+      on this {
+        _requestCapacity(_size + shift);
 
-      for i in idx.._size-1 by -1 {
-        _data[i+shift] = _data[i];
+        for i in idx.._size-1 by -1 {
+          _data[i+shift] = _data[i];
+        }
       }
       return;
     }
@@ -316,20 +355,21 @@ module Vector {
 
       if size == 0 then
         return true;
+      on this {
+        _requestCapacity(_size + size);
+        if idx == _size {
+          _extendGeneric(items);
+          result = true;
+        } else if _withinBounds(idx) {
+          _expand(idx, size);
 
-      _requestCapacity(_size + size);
-      if idx == _size {
-        _extendGeneric(items);
-        result = true;
-      } else if _withinBounds(idx) {
-        _expand(idx, size);
-
-        var i = idx;
-        for x in items {
-          _data[i] = x;
-          _size += 1;
-          i += 1;
-        }
+          var i = idx;
+          for x in items {
+            _data[i] = x;
+            _size += 1;
+            i += 1;
+          }
+      }
 
         result = true;
       }
@@ -363,9 +403,11 @@ module Vector {
 
       var result = false;
 
-      _enter();
-      result = _insertGenericKnownSize(idx, arr, arr.size);
-      _leave();
+      on this {
+        _enter();
+        result = _insertGenericKnownSize(idx, arr, arr.size);
+        _leave();
+      }
 
       return result;
     }
@@ -768,8 +810,10 @@ module Vector {
 
     pragma "no doc"
     inline proc ref _extendGeneric(collection) {
-      for item in collection {
-        _append(item);
+      on this {
+        for item in collection {
+          _append(item);
+        }
       }
     }
 
@@ -782,10 +826,12 @@ module Vector {
       :type other: `list(eltType)`
     */
     proc ref extend(other: vector(eltType, ?p)) lifetime this < other {
+      on this {
         _enter();
         _requestCapacity(_size + other.size);
         _extendGeneric(other);
         _leave();
+      }
     }
 
     /*
@@ -797,10 +843,12 @@ module Vector {
       :type other: `[?d] eltType`
     */
     proc ref extend(other: [?d] eltType) lifetime this < other {
-      _enter();
-      _requestCapacity(_size + d.size);
-      _extendGeneric(other);
-      _leave();
+      on this {
+        _enter();
+        _requestCapacity(_size + d.size);
+        _extendGeneric(other);
+        _leave();
+      }
     }
 
     /*
@@ -822,10 +870,11 @@ module Vector {
         param msg = "Cannot extend " + e + " with unbounded " + f;
         compilerError(msg);
       }
-
-      _enter();
-      _extendGeneric(other.size);
-      _leave();
+      on this {
+        _enter();
+        _extendGeneric(other.size);
+        _leave();
+      }
     }
 
     /*
@@ -926,12 +975,14 @@ module Vector {
                       " with elements of a non-nilable owned type, here: ",
                       eltType:string);
 
-      _enter();
+      on this {
+        _enter();
 
-      var result: [0..#_size] eltType =
-        forall i in 0..#_size do _data[i];
+        var result: [0..#_size] eltType =
+          forall i in 0..#_size do _data[i];
 
-      _leave();
+        _leave();
+      }
 
       return result;
     }

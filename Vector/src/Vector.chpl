@@ -99,6 +99,106 @@ module Vector {
       Initializes a vector containing elements that are copy initialized from
       the elements contained in another list.
 
+      Used in new expressions.
+
+      :arg other: The list to initialize from.
+
+      :arg parSafe: If `true`, this vector will use parallel safe operations.
+      :type parSafe: `param bool`
+    */
+    proc init(other: list(?t), param parSafe=false) {
+      if !isCopyableType(this.type.eltType) then
+        compilerError("Cannot copy vector with element type that " +
+                      "cannot be copied");
+      this.eltType = t;
+      this.parSafe = parSafe;
+      this.complete();
+      _requestCapacity(other.size);
+      _commonInitFromIterable(other);
+    }
+
+    /*
+      Initializes a vector containing elements that are copy initialized from
+      the elements contained in another list.
+
+      Used in new expressions.
+
+      :arg other: The vector to initialize from.
+
+      :arg parSafe: If `true`, this vector will use parallel safe operations.
+      :type parSafe: `param bool`
+    */
+    proc init(other: vector(?t), param parSafe=false) {
+      if !isCopyableType(this.type.eltType) then
+        compilerError("Cannot copy vector with element type that " +
+                      "cannot be copied");
+      this.eltType = t;
+      this.parSafe = parSafe;
+      this.complete();
+      _requestCapacity(other.size);
+      _commonInitFromIterable(other);
+    }
+
+    /*
+      Initializes a vector containing elements that are copy initialized from
+      the elements contained in an array.
+
+      Used in new expressions.
+
+      :arg other: The array to initialize from.
+
+      :arg parSafe: If `true`, this vector will use parallel safe operations.
+      :type parSafe: `param bool`
+    */
+    proc init(other: [?d] ?t, param parSafe=false) {
+      _checkType(t);
+      if !isCopyableType(t) then
+        compilerError("Cannot construct vector from array with element " +
+                      "type that cannot be copied");
+
+      this.eltType = t;
+      this.parSafe = parSafe;
+      this.complete();
+      _requestCapacity(other.size);
+      _commonInitFromIterable(other);
+    }
+
+    /*
+      Initializes a vector containing elements that are copy initialized from
+      the elements yielded by a range.
+
+      Used in new expressions.
+
+      .. note::
+
+        Attempting to initialize a vector from an unbounded range will trigger
+        a compiler error.
+
+      :arg other: The range to initialize from.
+
+      :arg parSafe: If `true`, this list will use parallel safe operations.
+      :type parSafe: `param bool`
+    */
+    proc init(other: range(?t), param parSafe=false) {
+      _checkType(t);
+      this.eltType = t;
+      this.parSafe = parSafe;
+
+      if !isBoundedRange(other) {
+        param e = this.type:string;
+        param f = other.type:string;
+        param msg = "Cannot init " + e + " from unbounded " + f;
+        compilerError(msg);
+      }
+
+      this.complete();
+      _requestCapacity(other.size);
+      _commonInitFromIterable(other);
+    }
+    /*
+      Initializes a vector containing elements that are copy initialized from
+      the elements contained in another list.
+
       :arg other: The list to initialize from.
     */
     proc init=(other: list(this.type.eltType)) {
@@ -144,6 +244,35 @@ module Vector {
                       "cannot be copied");
       this.eltType = this.type.eltType;
       this.parSafe = this.type.parSafe;
+      this.complete();
+
+      _requestCapacity(other.size);
+      _commonInitFromIterable(other);
+    }
+
+    /*
+      Initializes a vector containing elements that are copy initialized from
+      the elements yielded by a range.
+
+      .. note::
+
+        Attempting to initialize a vector from an unbounded range will trigger
+        a compiler error.
+
+      :arg other: The range to initialize from.
+      :type other: `range(this.type.eltType)`
+    */
+    proc init=(other: range(this.type.eltType, ?b, ?d)) {
+      this.eltType = this.type.eltType;
+      this.parSafe = this.type.parSafe;
+
+      if !isBoundedRange(other) {
+        param e = this.type:string;
+        param f = other.type:string;
+        param msg = "Cannot init " + e + " from unbounded " + f;
+        compilerError(msg);
+      }
+
       this.complete();
 
       _requestCapacity(other.size);
@@ -334,7 +463,6 @@ module Vector {
     //
     pragma "no doc"
     proc ref _expand(idx: int, shift: int=1) {
-      _sanity(_withinBounds(idx));
 
       if shift <= 0 then
         return;
@@ -369,7 +497,7 @@ module Vector {
             _size += 1;
             i += 1;
           }
-      }
+        }
 
         result = true;
       }
@@ -975,11 +1103,11 @@ module Vector {
                       " with elements of a non-nilable owned type, here: ",
                       eltType:string);
 
+      var result: [0..#_size] eltType;
       on this {
         _enter();
 
-        var result: [0..#_size] eltType =
-          forall i in 0..#_size do _data[i];
+         result = forall i in 0..#_size do _data[i];
 
         _leave();
       }

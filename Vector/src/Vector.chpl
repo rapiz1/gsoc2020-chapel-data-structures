@@ -921,11 +921,11 @@ module Vector {
       if threshold <= _initialCapacity then
         return;
 
-      if size > threshold then
+      if _size > threshold then
         return;
 
-      capacity /= 2; 
-      _domain = {0..#capacity};
+      _capacity /= 2; 
+      _domain = {0..#_capacity};
     }
     /*
       Request a change in capacity

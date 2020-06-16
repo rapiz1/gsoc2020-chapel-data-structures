@@ -700,8 +700,10 @@ module Vector {
       }
 
       var result = _data[idx];
-      _shift(idx);
       _size -= 1;
+      for i in idx .. _size-1 {
+        _data[i] = _data[i+1];
+      }
       _maybeDecreaseCapacity();
 
       return result;
@@ -1000,7 +1002,8 @@ module Vector {
       }
       on this {
         _enter();
-        _extendGeneric(other.size);
+        _requestCapacity(_size + other.size);
+        _extendGeneric(other);
         _leave();
       }
     }
@@ -1014,6 +1017,64 @@ module Vector {
       for i in 0..#_size {
         yield _data[i];
       }
+    }
+
+    pragma "no doc"
+    iter these(param tag: iterKind) ref where tag == iterKind.standalone {
+      const osz = _size;
+      const minChunkSize = 64;
+      const hasOneChunk = osz <= minChunkSize;
+      const numTasks = if hasOneChunk then 1 else here.maxTaskPar;
+      const chunkSize = floor(osz / numTasks):int;
+      const trailing = osz - chunkSize * numTasks;
+
+      coforall tid in 0..#numTasks {
+        var chunk = _computeChunk(tid, chunkSize, trailing);
+        for i in chunk(0) do
+          yield this[i];
+      }
+    }
+
+    pragma "no doc"
+    proc _computeChunk(tid, chunkSize, trailing) {
+      var lo, hi = 0;
+
+      if tid <= 0 {
+        lo = 0;
+        hi = chunkSize + trailing - 1;
+      } else {
+        lo = chunkSize * tid + trailing;
+        hi = lo + chunkSize - 1;
+      }
+
+      return (lo..hi,);
+    }
+
+    pragma "no doc"
+    iter these(param tag) ref where tag == iterKind.leader {
+      const osz = _size;
+      const minChunkSize = 32;
+      const hasOneChunk = osz <= minChunkSize;
+      const numTasks = if hasOneChunk then 1 else dataParTasksPerLocale;
+      const chunkSize = floor(osz / numTasks):int;
+      const trailing = osz - chunkSize * numTasks;
+
+      // TODO: We can just use the range iterator like above.
+      coforall tid in 0..#numTasks {
+        var chunk = _computeChunk(tid, chunkSize, trailing);
+        yield chunk;
+      }
+    }
+
+    pragma "no doc"
+    iter these(param tag, followThis) ref where tag == iterKind.follower {
+
+      //
+      // TODO: A faster scheme would access the _ddata directly to avoid
+      // the penalty of logarithmic indexing over and over again.
+      //
+      for i in followThis(0) do
+        yield this[i];
     }
 
     /*

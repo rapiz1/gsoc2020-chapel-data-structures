@@ -40,7 +40,22 @@ writeln(l2);
 writeln(l2.type:string);
 //l2.requestCapacity(32);
 
+takeAll(ldef);
 takeAll(l1);
 takeAll(l2);
 takeVector(l1);
 //takeVector(l2);
+
+/*
+[1, 2, 3, 4, 5, 6, 7, 8, 9]
+listng(int(64),vector)
+[1, 2, 3, 4, 5, 6, 7, 8, 9]
+listng(int(64),vector)
+32
+[1, 2, 3, 4, 5, 6, 7, 8, 9]
+listng(int(64),list)
+invoked on vector
+invoked on vector
+invoked on list
+invoked on vector only
+*/

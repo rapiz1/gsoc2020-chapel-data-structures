@@ -1,5 +1,30 @@
 use ListNG;
 
-var l:listng(int, false, impl.list) = 1..9;
-var v:listng(int, false, impl.vector) = l;
-writeln(v);
+type listType = int;
+param listLock = true;
+
+var lst1: listng(listType, listLock);
+
+for i in 1..8 do
+  lst1.append(i);
+
+var lst2: listng(listType, listLock);
+
+writeln(lst1);
+writeln(lst2);
+
+lst2 = lst1;
+
+writeln(lst1);
+writeln(lst2);
+
+lst1.clear();
+
+writeln(lst1);
+writeln(lst2);
+
+lst2 = lst1;
+
+writeln(lst1);
+writeln(lst2);
+

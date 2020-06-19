@@ -1,0 +1,1 @@
+listPopHaltEmpty.chpl:5: error: halt reached - Called "listng.pop" on an empty listng.

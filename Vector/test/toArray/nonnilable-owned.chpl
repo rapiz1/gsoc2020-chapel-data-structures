@@ -1,3 +1,3 @@
-use Vector;
-var v: vector(owned object);
-var a = v.toArray();
+use ListNG;
+var l: listng(owned object);
+var a = l.toArray();

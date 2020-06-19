@@ -311,7 +311,7 @@ module Vector {
     }
 
     pragma "no doc"
-    proc ref _append(x: eltType) {
+    proc ref _append(x: eltType) lifetime x > this {
       _requestCapacity(_size+1);
       _data[_size] = x;
       _size += 1;
@@ -351,7 +351,7 @@ module Vector {
       :arg x: An element to append.
       :type x: `eltType`
     */
-    proc ref append(x: eltType) {
+    proc ref append(x: eltType) lifetime x > this {
       _enter();
 
       _append(x);

@@ -1,9 +1,9 @@
-private use Vector;
+use ListNG;
 
 config const testIters = 8;
 
 const arr: [1..testIters] int = 1..testIters;
-var vec: vector(int) = arr;
+var vec: listng(int, false, impl.vector) = arr;
 
 forall (x, y) in zip(arr, vec) do
   assert(x == y);

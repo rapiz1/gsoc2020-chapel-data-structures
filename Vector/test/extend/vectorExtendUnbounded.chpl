@@ -1,3 +1,3 @@
-use Vector;
-var v = new vector(int);
+use ListNG;
+var v = new listng(int, false, impl.vector);
 v.extend(1..);

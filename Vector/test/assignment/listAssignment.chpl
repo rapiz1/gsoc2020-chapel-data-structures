@@ -1,6 +1,5 @@
-use Vector;
-use List;
+use ListNG;
 
-var l:list(int) = 1..9;
-var v = l;
+var l:listng(int, false, impl.list) = 1..9;
+var v:listng(int, false, impl.vector) = l;
 writeln(v);

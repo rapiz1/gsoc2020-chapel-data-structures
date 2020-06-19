@@ -1,5 +1,7 @@
 use Vector;
-var v = new vector(int);
+use ListNG;
+
+var v = new listng(int, false, impl.vector);
 for i in 0 .. 4 {
   v.append(i);
   writeln(v);

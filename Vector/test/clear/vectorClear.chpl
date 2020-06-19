@@ -1,6 +1,7 @@
 use Vector;
+use ListNG;
 
-var v = new vector(int);
+var v = new listng(int, false, impl.vector);
 writeln(v);
 
 for i in 1..10 {

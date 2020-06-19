@@ -1,5 +1,5 @@
-use Vector;
-var v:vector(int) = 1..10;
+use ListNG;
+var v:listng(int, false, impl.vector) = 1..10;
 for x in v {
   writeln(x);
 }

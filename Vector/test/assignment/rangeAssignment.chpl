@@ -1,3 +1,4 @@
 use Vector;
-var v:vector(int) = 1..9;
+use ListNG;
+var v:listng(int, false, impl.vector) = 1..9;
 writeln(v);

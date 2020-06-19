@@ -1,8 +1,9 @@
 private use Vector;
+use ListNG;
 
 config const testIters = 8;
 
-var vec: vector(int);
+var vec: listng(int, false, impl.vector);
 
 for i in 1..testIters do
   vec.append(i);

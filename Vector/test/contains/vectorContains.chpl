@@ -1,8 +1,9 @@
 use Vector;
+use ListNG;
 
 config const testIters = 10;
 
-var v: vector(int) = 1..testIters;
+var v: listng(int, false, impl.vector) = 1..testIters;
 
 for i in 1..testIters {
   assert(v.contains(i));

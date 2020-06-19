@@ -1,9 +1,9 @@
-private use Vector;
+use ListNG;
 
 config const testIters = 137;
 
-var vec1: vector(int);
-var vec2: vector(int, true);
+var vec1: listng(int, false, impl.vector);
+var vec2: listng(int, true, impl.vector);
 
 for i in 1..testIters do
   vec1.append(i);

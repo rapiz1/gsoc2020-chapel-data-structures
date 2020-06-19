@@ -27,7 +27,7 @@ module Vector {
   import ChapelLocks;
   private use HaltWrappers;
   private use Sort;
-  private use List;
+  private use List only list;
 
   pragma "no doc"
   private const _initialCapacity = 8;
@@ -59,6 +59,11 @@ module Vector {
 
   private use IO;
 
+  proc _checkType(type t) {
+    if (isNonNilableClass(t)) {
+      compilerError("Vector does not support non-nilable class");
+    }
+  }
   record vector {
     /* The type of the elements contained in this vector. */
     type eltType;
@@ -90,6 +95,7 @@ module Vector {
       :type parSafe: `param bool`
     */
     proc init(type eltType, param parSafe=false) {
+      _checkType(eltType);
       this.eltType = eltType;
       this.parSafe = parSafe;
       this.complete();
@@ -107,6 +113,7 @@ module Vector {
       :type parSafe: `param bool`
     */
     proc init(other: list(?t), param parSafe=false) {
+      _checkType(this.type.eltType);
       if !isCopyableType(this.type.eltType) then
         compilerError("Cannot copy vector with element type that " +
                       "cannot be copied");
@@ -129,6 +136,7 @@ module Vector {
       :type parSafe: `param bool`
     */
     proc init(other: vector(?t), param parSafe=false) {
+      _checkType(t);
       if !isCopyableType(this.type.eltType) then
         compilerError("Cannot copy vector with element type that " +
                       "cannot be copied");
@@ -202,6 +210,7 @@ module Vector {
       :arg other: The list to initialize from.
     */
     proc init=(other: list(this.type.eltType)) {
+      _checkType(this.type.eltType);
       if !isCopyableType(this.type.eltType) then
         compilerError("Cannot copy vector with element type that " +
                       "cannot be copied");
@@ -221,6 +230,7 @@ module Vector {
       :arg other: The array to initialize from.
     */
     proc init=(other: [?d] this.type.eltType) {
+      _checkType(this.type.eltType);
       if !isCopyableType(this.type.eltType) then
         compilerError("Cannot copy vector with element type that " +
                       "cannot be copied");
@@ -239,6 +249,7 @@ module Vector {
       :arg other: The vector to initialize from.
     */
     proc init=(other: vector(this.type.eltType)) {
+      _checkType(this.type.eltType);
       if !isCopyableType(this.type.eltType) then
         compilerError("Cannot copy vector with element type that " +
                       "cannot be copied");
@@ -263,6 +274,7 @@ module Vector {
       :type other: `range(this.type.eltType)`
     */
     proc init=(other: range(this.type.eltType, ?b, ?d)) {
+      _checkType(this.type.eltType);
       this.eltType = this.type.eltType;
       this.parSafe = this.type.parSafe;
 

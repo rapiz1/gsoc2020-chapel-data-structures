@@ -497,9 +497,9 @@ module Vector {
             _size += 1;
             i += 1;
           }
-        }
 
-        result = true;
+          result = true;
+        }
       }
 
       return result;
@@ -1175,5 +1175,58 @@ module Vector {
 
       return result;
     }
+  }
+
+  /*
+    Clear the contents of this vector, then extend this now empty vector with the
+    elements contained in another vector.
+
+    .. warning::
+
+      This will invalidate any references to elements previously contained in
+      `lhs`.
+
+    :arg lhs: The vector to assign to.
+    :arg rhs: The vector to assign from. 
+  */
+  proc =(ref lhs: vector(?t, ?), rhs: vector(t, ?)) {
+    lhs.clear();
+    lhs.extend(rhs);
+  }
+
+  /*
+    Returns `true` if the contents of two vectors are the same.
+
+    :arg a: A vector to compare.
+    :arg b: A vector to compare.
+
+    :return: `true` if the contents of two vectors are equal.
+    :rtype: `bool`
+  */
+  proc ==(a: vector(?t, ?), b: vector(t, ?)): bool {
+    if a.size != b.size then
+      return false;
+
+    //
+    // TODO: Make this a forall loop eventually.
+    //
+    for i in 0..#(a.size) do
+      if a[i] != b[i] then
+        return false;
+
+    return true;
+  }
+
+  /*
+    Return `true` if the contents of two vectors are not the same.
+
+    :arg a: A vector to compare.
+    :arg b: A vector to compare.
+
+    :return: `true` if the contents of two vectors are not equal.
+    :rtype: `bool`
+  */
+  proc !=(a: vector(?t, ?), b: vector(t, ?)): bool {
+    return !(a == b);
   }
 }

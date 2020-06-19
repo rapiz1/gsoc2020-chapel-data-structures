@@ -1,0 +1,1 @@
+vectorIndexOfHaltEnd.chpl:12: error: halt reached - End index for "vector.indexOf" out of bounds: 8

@@ -1,0 +1,1 @@
+vectorIndexOfHaltStart.chpl:10: error: halt reached - Start index for "vector.indexOf" out of bounds: -1

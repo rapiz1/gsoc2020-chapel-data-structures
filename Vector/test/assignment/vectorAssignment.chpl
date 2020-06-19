@@ -1,5 +1,6 @@
 use Vector;
+use List;
 
-var v:vector(int) = [1,2,3,4,5,6,7,8,9];
-var v2:vector(int) = v;
-writeln(v2);
+var l:list(int) = 1..9;
+var v = l;
+writeln(v);

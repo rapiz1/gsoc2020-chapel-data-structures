@@ -1,0 +1,15 @@
+#!/bin/python
+import sys
+import os.path
+
+output = ''
+with open(sys.argv[2], 'r') as f:
+  for line in f:
+    pos = line.find(':')
+    if pos == -1:
+      output += line
+    else:
+      output += os.path.basename(line[:pos]) + line[pos:]
+
+open(sys.argv[2], 'w').write(output)
+    

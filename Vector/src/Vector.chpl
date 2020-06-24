@@ -63,6 +63,12 @@ module Vector {
     if (isNonNilableClass(t)) {
       compilerError("Vector does not support non-nilable class");
     }
+    if (isOwnedClass(t)) {
+      compilerError("Vector does not support owned class");
+    }
+    if (!isDefaultInitializable(t)) {
+      compilerError("Vector does not support class that can't be default initialized");
+    }
   }
   record vector {
     /* The type of the elements contained in this vector. */

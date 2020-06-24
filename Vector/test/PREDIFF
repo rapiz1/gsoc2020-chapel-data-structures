@@ -9,7 +9,8 @@ with open(sys.argv[2], 'r') as f:
     if pos == -1:
       output += line
     else:
-      output += os.path.basename(line[:pos]) + line[pos:]
+      pos2 = line.find(':', pos+1)
+      output += os.path.basename(line[:pos]) + ':xxx' + line[pos2:]
 
 open(sys.argv[2], 'w').write(output)
     

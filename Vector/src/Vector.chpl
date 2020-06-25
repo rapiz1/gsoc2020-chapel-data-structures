@@ -60,14 +60,11 @@ module Vector {
   private use IO;
 
   proc _checkType(type t) {
-    if (isNonNilableClass(t)) {
-      compilerError("Vector does not support non-nilable class");
+    if (!isDefaultInitializable(t)) {
+      compilerError("Vector does not support class that can't be default initialized");
     }
     if (isOwnedClass(t)) {
       compilerError("Vector does not support owned class");
-    }
-    if (!isDefaultInitializable(t)) {
-      compilerError("Vector does not support class that can't be default initialized");
     }
   }
   record vector {

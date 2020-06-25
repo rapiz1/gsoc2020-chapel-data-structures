@@ -63,9 +63,6 @@ module Vector {
     if (!isDefaultInitializable(t)) {
       compilerError("Vector does not support class that can't be default initialized");
     }
-    if (isOwnedClass(t)) {
-      compilerError("Vector does not support owned class");
-    }
   }
   record vector {
     /* The type of the elements contained in this vector. */
@@ -320,6 +317,14 @@ module Vector {
       _size += 1;
     }
 
+    pragma "no doc"
+    proc ref _append(ref x: eltType) where isOwnedClass(x)
+    lifetime x > this {
+      _requestCapacity(_size+1);
+      _data[_size] = x;
+      _size += 1;
+    }
+
     /*
       The current number of elements contained in this vector.
     */
@@ -355,6 +360,16 @@ module Vector {
       :type x: `eltType`
     */
     proc ref append(x: eltType) lifetime x > this {
+      _enter();
+
+      _append(x);
+
+      _leave();
+    }
+
+    pragma "no doc"
+    proc ref append(ref x: eltType) where isOwnedClass(x)
+    lifetime x > this {
       _enter();
 
       _append(x);

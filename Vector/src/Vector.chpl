@@ -514,11 +514,12 @@ module Vector {
       if size == 0 then
         return true;
       on this {
-        _requestCapacity(_size + size);
         if idx == _size {
+          _requestCapacity(_size + size);
           _extendGeneric(items);
           result = true;
         } else if _withinBounds(idx) {
+          _requestCapacity(_size + size);
           _expand(idx, size);
 
           var i = idx;

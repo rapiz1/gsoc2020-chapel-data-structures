@@ -149,6 +149,25 @@ module Vector {
 
     /*
       Initializes a vector containing elements that are copy initialized from
+      the elements contained in another vector.
+
+      :arg other: The vector to initialize from.
+    */
+    proc init=(other: vector(this.type.eltType)) {
+      _checkType(this.type.eltType);
+      if !isCopyableType(this.type.eltType) then
+        compilerError("Cannot copy vector with element type that " +
+                      "cannot be copied");
+      this.eltType = this.type.eltType;
+      this.parSafe = this.type.parSafe;
+      this.complete();
+
+      _requestCapacity(other.size);
+      _commonInitFromIterable(other);
+    }
+
+    /*
+      Initializes a vector containing elements that are copy initialized from
       the elements contained in an array.
 
       Used in new expressions.
@@ -239,25 +258,6 @@ module Vector {
       this.complete();
 
       _requestCapacity(d.size);
-      _commonInitFromIterable(other);
-    }
-
-    /*
-      Initializes a vector containing elements that are copy initialized from
-      the elements contained in another vector.
-
-      :arg other: The vector to initialize from.
-    */
-    proc init=(other: vector(this.type.eltType)) {
-      _checkType(this.type.eltType);
-      if !isCopyableType(this.type.eltType) then
-        compilerError("Cannot copy vector with element type that " +
-                      "cannot be copied");
-      this.eltType = this.type.eltType;
-      this.parSafe = this.type.parSafe;
-      this.complete();
-
-      _requestCapacity(other.size);
       _commonInitFromIterable(other);
     }
 

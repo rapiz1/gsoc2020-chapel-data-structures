@@ -9,6 +9,8 @@ module Treap {
   private use Random;
   private use IO;
 
+  pragma "no doc"
+  private param _sanityChecks = true;
 
   // The locker is borrowed from List.chpl
   // 
@@ -52,6 +54,7 @@ module Treap {
     type eltType;
     var element: eltType;
     var rank, size: int;
+    var parent: unmanaged _treapNode(eltType)?;
     var children: [0..1] unmanaged _treapNode(eltType)?;
     proc update() {
       size = 1;
@@ -64,7 +67,16 @@ module Treap {
     proc destroy() {
       for child in children {
         if child != nil {
+          child!.destroy();
           delete child;
+        }
+      }
+    }
+    proc sanityChecks() {
+      if !_sanityChecks then return;
+      for child in children {
+        if child != nil {
+          assert(child!.parent == this);
         }
       }
     }
@@ -107,24 +119,6 @@ module Treap {
     }
 
     /*
-      Returns `true` if this set contains zero elements.
-
-      :return: `true` if this set is empty.
-      :rtype: `bool`
-    */
-    inline proc const isEmpty(): bool {
-      var result = false;
-
-      on this {
-        _enter();
-        result = _root == nil;
-        _leave();
-      }
-
-      return result;
-    }
-
-    /*
       The current number of elements contained in this set.
     */
     inline proc const size {
@@ -150,6 +144,7 @@ module Treap {
         return;
       }
       else {
+        node!.sanityChecks();
         _lmrVisit(node!.children[0], ch);
         ch.write(node!.element, ' ');
         _lmrVisit(node!.children[1], ch);
@@ -165,90 +160,7 @@ module Treap {
       _lmrVisit(_root, ch);
       ch.write(']');
     }
-    /*
-      Returns `true` if the given element is a member of this set, and `false`
-      otherwise.
 
-      :arg x: The element to test for membership.
-      :return: Whether or not the given element is a member of this set.
-      :rtype: `bool`
-    */
-    /*
-    FIXME: Wait for _find to be fixed
-    proc const contains(const ref x: eltType): bool {
-      var result = false;
-
-      on this {
-        _enter(); 
-        result = _find(_root, x) == nil;
-        _leave();
-      }
-
-      return result;
-    }
-    */
-
-    /*
-      the rotation will make the node.children[pos] becomes the new _root
-    */
-    pragma "no doc"
-    proc _rotate(ref node: nodeType, pos: int) {
-      var child = node!.children[pos];
-
-      node!.children[pos] = child!.children[pos^1];
-      child!.children[pos^1] = node;
-
-      // Update the size field
-      node!.update();
-      child!.update();
-
-      node = child; // Update the root
-    }
-
-    /*
-      Helper procedure to locate a certain node
-    */
-    /*
-    FIXME: Why this failed to compile?
-    pragma "no doc"
-    proc _find(ref node: nodeType, element: eltType) ref: nodeType
-    lifetime node = _root {
-      if node == nil then return node;
-      var cmp = chpl_compare(element, node!.element, comparator);
-      if cmp == 0 then return node;
-      else if cmp < 0 then return _find(node!.children[0], element);
-      else return _find(node!.children[1], element);
-    }
-    */
-
-    /*
-      Compare wrapper
-    */
-    pragma "no doc"
-    proc _compare(x: eltType, y: eltType) {
-      return chpl_compare(x, y, comparator);
-    }
-
-    pragma "no doc"
-    proc ref _insert(ref node: nodeType, element: eltType): bool {
-      //TODO: Balance the treap
-      if node == nil {
-        node = new nodeType(element, _random(), 1);
-        return true;
-      }
-      var cmp = _compare(element, node!.element);
-      if cmp == 0 then return false;
-      else {
-        var result = false;
-        var pos: int = cmp > 0;
-        result = _insert(node!.children[pos], element);
-        if node!.children[pos]!.rank > node!.rank {
-          _rotate(node, pos);
-        }
-        node!.update();
-        return result;
-      }
-    }
 
     /*
       Add a copy of the element `x` to this set. Does nothing if this set
@@ -261,8 +173,100 @@ module Treap {
       // Remove `on this` block because it prevents copy elision of `x` when
       // passed to `_addElem`. See #15808.
       _enter();
-      _insert(_root, x);
+      _insert(_root, x, nil);
       _leave();
+    }
+
+    /*
+      Returns `true` if the given element is a member of this set, and `false`
+      otherwise.
+
+      :arg x: The element to test for membership.
+      :return: Whether or not the given element is a member of this set.
+      :rtype: `bool`
+    */
+    proc const contains(const ref x: eltType): bool {
+      var result = false;
+
+      on this {
+        _enter(); 
+        result = _find(_root, x) == nil;
+        _leave();
+      }
+
+      return result;
+    }
+
+    /*
+      Helper procedure to make x becomes a child of y, in position pos
+    */
+    pragma "no doc"
+    proc _link(x: nodeType, y: nodeType, pos: int) {
+      if x != nil then
+        x!.parent = y;
+      if y != nil then
+        y!.children[pos] = x;
+    }
+
+    /*
+      The rotation will make the node.children[pos] becomes the new _root
+    */
+    pragma "no doc"
+    proc _rotate(ref node: nodeType, pos: int) {
+      var child = node!.children[pos];
+      var parent = node!.parent;
+
+      _link(child!.children[pos^1], node, pos);
+      _link(node, child, pos^1);
+      
+
+      // Update the size field
+      node!.update();
+      child!.update();
+
+      child!.parent = parent;
+      node = child; // This is for change the node in its parent's children array
+    }
+
+    /*
+      Helper procedure to locate a certain node
+    */
+    pragma "no doc"
+    proc _find(ref node: nodeType, element: eltType) ref: nodeType
+    lifetime return node {
+      if node == nil then return node;
+      var cmp = chpl_compare(element, node!.element, comparator);
+      if cmp == 0 then return node;
+      else if cmp < 0 then return _find(node!.children[0], element);
+      else return _find(node!.children[1], element);
+    }
+
+    /*
+      Compare wrapper
+    */
+    pragma "no doc"
+    proc _compare(x: eltType, y: eltType) {
+      return chpl_compare(x, y, comparator);
+    }
+
+    pragma "no doc"
+    proc ref _insert(ref node: nodeType, element: eltType, parent: nodeType): bool {
+      if node == nil {
+        node = new nodeType(element, _random(), 1, parent);
+        return true;
+      }
+      var cmp = _compare(element, node!.element);
+      if cmp == 0 then return false;
+      else {
+        var result = false;
+        var pos: int = cmp > 0;
+        result = _insert(node!.children[pos], element, node);
+        if node!.children[pos]!.rank > node!.rank {
+          _rotate(node, pos);
+        }
+        node!.update();
+        return result;
+      }
     }
 
     proc ref _remove(ref node: nodeType, const ref x: eltType): bool {
@@ -334,14 +338,122 @@ module Treap {
     }
 
     /*
+      Clear the contents of this set.
+
+      .. warning::
+
+        Clearing the contents of this set will invalidate all existing
+        references to the elements contained in this set.
+    */
+    proc ref clear() {
+      on this {
+        _enter();
+        if _root != nil {
+          _root!.destroy();
+          delete _root;
+          _root = nil;
+        }
+        _leave();
+      }
+    }
+
+    /*
+      Iterate over the elements of this set. Yields constant references
+      that cannot be modified.
+
+      .. warning::
+
+        Modifying this set while iterating over it may invalidate the
+        references returned by an iterator and is considered undefined
+        behavior.
+      
+      :yields: A constant reference to an element in this set.
+    */
+    iter const these() {
+      //TODO:
+    }
+
+    /*
       Write the contents of this list to a channel.
 
       :arg ch: A channel to write to.
     */
-    proc writeThis(ch: channel) throws {
+    proc const writeThis(ch: channel) throws {
       _enter();
       _visit(ch);
       _leave();
+    }
+
+    /*
+      Returns `true` if this set contains zero elements.
+
+      :return: `true` if this set is empty.
+      :rtype: `bool`
+    */
+    inline proc const isEmpty(): bool {
+      var result = false;
+
+      on this {
+        _enter();
+        result = _root == nil;
+        _leave();
+      }
+
+      return result;
+    }
+
+    /*
+      The current number of elements contained in this set.
+    */
+    inline proc const size {
+      var result = 0;
+
+      on this {
+        _enter();
+        if _root != nil then
+          result = _root!.size;
+        _leave();
+      }
+
+      return result;
+    }
+
+    /*
+      Returns a new DefaultRectangular array containing a copy of each of the
+      elements contained in this set. The elements of the returned array are
+      not guaranteed to follow any particular ordering.
+
+      :return: An array containing a copy of each of the elements in this set.
+      :rtype: `[] eltType`
+    */
+    proc const toArray(): [] eltType {
+      // May take locks non-locally...
+      _enter(); defer _leave();
+
+      var treapSize = 0;
+      if _root != nil then treapSize = _root!.size;
+
+      var result: [0..#treapSize] eltType;
+
+      if !isCopyableType(eltType) then
+        compilerError('Cannot create array because set element type ' +
+                      eltType:string + ' is not copyable');
+
+      on this {
+        if treapSize != 0 {
+          var count = 0;
+          var array: [0..#treapSize] eltType;
+
+          for x in this {
+            array[count] = x;
+            count += 1;
+          }
+
+          result = array;
+        }
+      }
+
+      return result;
     }
   }
 }

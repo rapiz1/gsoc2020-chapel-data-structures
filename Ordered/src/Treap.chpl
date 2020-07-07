@@ -119,6 +119,18 @@ module Treap {
     }
 
     /*
+      Print one node together with its children
+    */
+    pragma "no doc"
+    proc _writeNode(node: nodeType, ch: channel) throws {
+      var ret:(int, int, int);
+      ret[0] = node!.element;
+      if node!.children[0] then ret[1] = node!.children[0]!.element;
+      if node!.children[1] then ret[2] = node!.children[1]!.element;
+      ch.write(ret);
+    }
+
+    /*
       The current number of elements contained in this set.
     */
     inline proc const size {
@@ -358,6 +370,116 @@ module Treap {
     }
 
     /*
+      Helper procedure to return predecessor/successor of one node
+      if direction is 0, return predecessor
+      else if 1, return successor
+    */
+    pragma "no doc"
+    proc _neighbour(in node: nodeType, in direction: int) {
+      // Assuming direction is 1, we're finding the successor
+      if node == nil then return nil;
+      if node!.children[direction] {
+        // node has right child,
+        // find the leftmost node in its right child tree 
+        node = node!.children[direction];
+        direction ^= 1;
+        while node != nil && node!.children[direction] != nil {
+          node = node!.children[direction];
+        }
+      }
+      else {
+        // node doesn't have right child,
+        // find its first ancesstor whose left child tree it belongs to
+        direction ^= 1;
+        while node!.parent != nil && node!.parent!.children[direction] != node {
+          node = node!.parent;
+        }
+        return node!.parent;
+      }
+      return node;
+    }
+
+    /*
+      Find the predecessor of one element in the treap.
+      Returns if there is such one element.
+      If there is, store the result in `result`.
+
+      :arg e: The element to base
+      :type e: `eltType`
+
+      :arg result: The destination to store the result
+      :type result: `eltType`
+
+      :return: if there is such one element
+      :rtype: `bool`
+    */
+    proc predecessor(e: eltType, out result: eltType) {
+      _enter();
+      var baseNode = _find(_root, e);
+      if baseNode == nil {
+        _leave();
+        return false;
+      }
+
+      var resultNode = _neighbour(baseNode, 0);
+      if resultNode == nil {
+        _leave();
+        return false;
+      }
+      else {
+        result = resultNode!.element;
+        _leave();
+        return true;
+      }
+    }
+    
+    /*
+      Find the successor of one element in the treap.
+      Returns if there is such one element.
+      If there is, store the result in `result`.
+
+      :arg e: The element to base
+      :type e: `eltType`
+
+      :arg result: The destination to store the result
+      :type result: `eltType`
+
+      :return: if there is such one element
+      :rtype: `bool`
+    */
+    proc successor(e: eltType, out result: eltType) {
+      _enter();
+      var baseNode = _find(_root, e);
+      if baseNode == nil {
+        _leave();
+        return false;
+      }
+
+      var resultNode = _neighbour(baseNode, 1);
+      if resultNode == nil {
+        _leave();
+        return false;
+      }
+      else {
+        result = resultNode!.element;
+        _leave();
+        return true;
+      }
+    }
+
+    /*
+      Returns the minimal element in the tree
+    */
+    pragma "no doc"
+    proc _first() {
+      var node = _root;
+      while node != nil && node!.children[0] != nil {
+        node = node!.children[0];
+      }
+      return node;
+    }
+
+    /*
       Iterate over the elements of this set. Yields constant references
       that cannot be modified.
 
@@ -370,7 +492,11 @@ module Treap {
       :yields: A constant reference to an element in this set.
     */
     iter const these() {
-      //TODO:
+      var node = _first();
+      while node != nil {
+        yield node!.element;
+        node = _neighbour(node, 1);
+      }
     }
 
     /*

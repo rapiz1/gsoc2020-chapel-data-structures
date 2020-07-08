@@ -399,6 +399,69 @@ module Treap {
       return node;
     }
 
+    pragma "no doc"
+    proc const _lower_bound(node: nodeType, e: eltType) {
+      if node == nil then return nil;
+      var cmp = _compare(e, node!.element);
+      if cmp == 0 then return node;
+      else if cmp < 0 {
+        var result = _lower_bound(node!.children[0], e);
+        if result != nil then return result;
+        else return node;
+      }
+      else return _lower_bound(node!.children[1], e);
+    }
+
+    pragma "no doc"
+    proc const _upper_bound(node: nodeType, e: eltType) {
+      if node == nil then return nil;
+      var cmp = _compare(e, node!.element);
+      if cmp >= 0 then return _upper_bound(node!.children[1], e);
+      else {
+        var result = _upper_bound(node!.children[0], e);
+        if result != nil then return result;
+        else return node;
+      }
+    }
+
+    /*
+      Find the first element in the treap
+       which does not compare less than e.
+      Returns whether there is such an element
+
+      :arg result: The destination to store the result
+      :type result: `eltType`
+
+      :returns: whether there is such an element
+      :rtype: `bool`
+    */
+    proc const lower_bound(e: eltType, out result: eltType): bool {
+      _enter();
+      var node = _lower_bound(_root, e);
+      result = node!.element;
+      _leave();
+      return node == nil;
+    }
+
+    /*
+      Find the first element in the treap
+       which does not compare less than e.
+      Returns whether there is such an element
+
+      :arg result: The destination to store the result
+      :type result: `eltType`
+
+      :returns: whether there is such an element
+      :rtype: `bool`
+    */
+    proc const upper_bound(e: eltType, out result: eltType): bool {
+      _enter();
+      var node = _upper_bound(_root, e);
+      result = node!.element;
+      _leave();
+      return node == nil;
+    }
+
     /*
       Find the predecessor of one element in the treap.
       Returns if there is such one element.

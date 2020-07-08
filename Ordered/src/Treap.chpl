@@ -500,6 +500,46 @@ module Treap {
     }
 
     /*
+      Returns `true` if this set shares no elements in common with the set
+      `other`, and `false` otherwise.
+
+      :arg other: The set to compare against.
+      :return: Whether or not this set and `other` are disjoint.
+      :rtype: `bool`
+    */
+    proc const isDisjoint(const ref other: treap(eltType, ?)): bool {
+      var result = true;
+
+      on this {
+        _enter(); defer _leave();
+
+        if !(size == 0 || other.size == 0) {
+
+          // TODO: Take locks on other?
+          for x in other do
+            if this.contains(x) {
+              result = false;
+              break;
+            }
+        }
+      }
+
+      return result;
+    }
+    
+    /*
+      Returns `true` if this set and `other` have at least one element in
+      common, and `false` otherwise.
+
+      :arg other: The set to compare against.
+      :return: Whether or not this set and `other` intersect.
+      :rtype: `bool`
+    */
+    proc const isIntersecting(const ref other: treap(eltType, ?)): bool {
+      return !isDisjoint(other);
+    }
+
+    /*
       Write the contents of this list to a channel.
 
       :arg ch: A channel to write to.

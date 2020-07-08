@@ -122,7 +122,7 @@ module Treap {
       Print one node together with its children
     */
     pragma "no doc"
-    proc _writeNode(node: nodeType, ch: channel) throws {
+    proc const _writeNode(node: nodeType, ch: channel) throws {
       var ret:(int, int, int);
       ret[0] = node!.element;
       if node!.children[0] then ret[1] = node!.children[0]!.element;
@@ -151,7 +151,7 @@ module Treap {
       Visit elements in the left child, root, right child order
     */
     pragma "no doc"
-    proc _lmrVisit(node: nodeType, ch: channel) throws {
+    proc const _lmrVisit(node: nodeType, ch: channel) throws {
       if node == nil {
         return;
       }
@@ -167,7 +167,7 @@ module Treap {
       Visit and output elements in order
     */
     pragma "no doc"
-    proc _visit(ch: channel) throws {
+    proc const _visit(ch: channel) throws {
       ch.write('[ ');
       _lmrVisit(_root, ch);
       ch.write(']');
@@ -244,7 +244,7 @@ module Treap {
       Helper procedure to locate a certain node
     */
     pragma "no doc"
-    proc _find(ref node: nodeType, element: eltType) ref: nodeType
+    proc _find(const node: nodeType, element: eltType): nodeType
     lifetime return node {
       if node == nil then return node;
       var cmp = chpl_compare(element, node!.element, comparator);
@@ -257,7 +257,7 @@ module Treap {
       Compare wrapper
     */
     pragma "no doc"
-    proc _compare(x: eltType, y: eltType) {
+    proc const _compare(x: eltType, y: eltType) {
       return chpl_compare(x, y, comparator);
     }
 
@@ -413,7 +413,7 @@ module Treap {
       :return: if there is such one element
       :rtype: `bool`
     */
-    proc predecessor(e: eltType, out result: eltType) {
+    proc const predecessor(e: eltType, out result: eltType) {
       _enter();
       var baseNode = _find(_root, e);
       if baseNode == nil {
@@ -447,7 +447,7 @@ module Treap {
       :return: if there is such one element
       :rtype: `bool`
     */
-    proc successor(e: eltType, out result: eltType) {
+    proc const successor(e: eltType, out result: eltType) {
       _enter();
       var baseNode = _find(_root, e);
       if baseNode == nil {

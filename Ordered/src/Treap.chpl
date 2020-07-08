@@ -50,6 +50,13 @@ module Treap {
   }
 
   pragma "no doc"
+  proc _checkType(type eltType) {
+    /*
+      Keep this in case we want to check types in the future
+    */
+  }
+
+  pragma "no doc"
   class _treapNode {
     type eltType;
     var element: eltType;
@@ -477,21 +484,18 @@ module Treap {
       :rtype: `bool`
     */
     proc const predecessor(e: eltType, out result: eltType) {
-      _enter();
+      _enter(); defer _leave();
       var baseNode = _find(_root, e);
       if baseNode == nil {
-        _leave();
         return false;
       }
 
       var resultNode = _neighbour(baseNode, 0);
       if resultNode == nil {
-        _leave();
         return false;
       }
       else {
         result = resultNode!.element;
-        _leave();
         return true;
       }
     }
@@ -511,21 +515,18 @@ module Treap {
       :rtype: `bool`
     */
     proc const successor(e: eltType, out result: eltType) {
-      _enter();
+      _enter(); defer _leave();
       var baseNode = _find(_root, e);
       if baseNode == nil {
-        _leave();
         return false;
       }
 
       var resultNode = _neighbour(baseNode, 1);
       if resultNode == nil {
-        _leave();
         return false;
       }
       else {
         result = resultNode!.element;
-        _leave();
         return true;
       }
     }

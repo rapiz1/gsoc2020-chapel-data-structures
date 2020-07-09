@@ -163,27 +163,6 @@ module Treap {
     }
 
     /*
-      Initialize this set with a copy of each of the elements contained in
-      the set `other`. This set will inherit the `parSafe` value of the
-      set `other`.
-
-      :arg other: A set to initialize this set with.
-    */
-    proc init=(const ref other: orderedSet(?t)) lifetime this < other {
-      this.eltType = t;
-      this.parSafe = other.parSafe;
-      this.comparator = other.instance.comparator;
-      this.complete();
-
-      if !isCopyableType(eltType) then
-        compilerError('Cannot initialize ' + this.type:string + ' from ' +
-                      other.type:string + ' because element type ' +
-                      eltType:string + ' is not copyable');
-
-      for elem in other do _add(elem);
-    }
-
-    /*
       Print one node together with its children
     */
     pragma "no doc"
@@ -666,7 +645,7 @@ module Treap {
     }
 
     /*
-      Write the contents of this list to a channel.
+      Write the contents of this set to a channel.
 
       :arg ch: A channel to write to.
     */

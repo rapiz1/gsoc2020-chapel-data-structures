@@ -1,18 +1,19 @@
 /* Documentation for Ordered */
 module Ordered {
   private use Treap;
+  private use IO;
   public use Sort only defaultComparator;
   enum orderedImpl {treap, skipList};
 
   proc getTypeFromEnumVal(param val, type eltType, param parSafe) type {
     if val == orderedImpl.treap then return treap(eltType, parSafe);
+    //FIXME: Use skipList when avaliable
     if val == orderedImpl.skipList then return treap(eltType, parSafe);
-    //if val == impl.list then return list(eltType, parSafe);
   }
   proc getInstanceFromEnumVal(param val, type eltType, param parSafe, comparator: record = defaultComparator) {
     if val == orderedImpl.treap then return new treap(eltType, parSafe, comparator);
+    //FIXME: Use skipList when avaliable
     if val == orderedImpl.skipList then return new treap(eltType, parSafe, comparator);
-    //if val == impl.list then return new list(other, parSafe);
   }
 
   param _defaultImpl = orderedImpl.treap;
@@ -30,6 +31,38 @@ module Ordered {
       this.implType = implType;
 
       this.instance = getInstanceFromEnumVal(implType, eltType, parSafe, comparator); 
+    }
+
+    /*
+      Initialize this set with a copy of each of the elements contained in
+      the set `other`. This set will inherit the `parSafe` value of the
+      set `other`.
+
+      :arg other: A set to initialize this set with.
+    */
+    proc init=(const ref other: orderedSet(?t)) lifetime this < other {
+      this.eltType = t;
+      this.parSafe = other.parSafe;
+      this.instance = getInstanceFromEnumVal(this.implType, this.eltType, this.parSafe, other.instance.comparator); 
+
+      this.complete();
+
+
+      if !isCopyableType(eltType) then
+        compilerError('Cannot initialize ' + this.type:string + ' from ' +
+                      other.type:string + ' because element type ' +
+                      eltType:string + ' is not copyable');
+
+      for elem in other do instance._add(elem);
+    }
+
+    /*
+      Write the contents of this set to a channel.
+
+      :arg ch: A channel to write to.
+    */
+    proc const writeThis(ch: channel) throws {
+      instance.writeThis(ch);
     }
   }
 }

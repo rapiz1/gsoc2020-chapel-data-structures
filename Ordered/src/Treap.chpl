@@ -8,6 +8,7 @@ module Treap {
   private use Sort;
   private use Random;
   private use IO;
+  private use Ordered only orderedSet;
 
   pragma "no doc"
   private param _sanityChecks = true;
@@ -126,6 +127,63 @@ module Treap {
     }
 
     /*
+      Initializes an empty set containing elements of the given type.
+
+      :arg eltType: The type of the elements of this set.
+      :arg parSafe: If `true`, this set will use parallel safe operations.
+      :arg comparator: The comparator used to compare elements.
+    */
+    proc init(type eltType, param parSafe=false, comparator: record = defaultComparator) {
+      _checkType(eltType);
+      this.eltType = eltType;
+      this.parSafe = parSafe;
+      this.comparator = comparator;
+    }
+
+    /*
+      Initialize this set with a unique copy of each element contained in
+      `iterable`. If an element from `iterable` is already contained in this
+      set, it will not be added again. The formal `iterable` must be a type
+      with an iterator named "these" defined for it.
+
+      :arg iterable: A collection of elements to add to this set.
+      :arg parSafe: If `true`, this set will use parallel safe operations.
+      :arg comparator: The comparator used to compare elements.
+    */
+    proc init(type eltType, iterable, param parSafe=false, comparator: record = defaultComparator)
+    where canResolveMethod(iterable, "these") lifetime this < iterable {
+      _checkType(eltType); 
+
+      this.eltType = eltType;
+      this.parSafe = parSafe;
+      this.comparator = comparator;
+      this.complete();
+
+      for elem in iterable do _add(elem);
+    }
+
+    /*
+      Initialize this set with a copy of each of the elements contained in
+      the set `other`. This set will inherit the `parSafe` value of the
+      set `other`.
+
+      :arg other: A set to initialize this set with.
+    */
+    proc init=(const ref other: orderedSet(?t)) lifetime this < other {
+      this.eltType = t;
+      this.parSafe = other.parSafe;
+      this.comparator = other.instance.comparator;
+      this.complete();
+
+      if !isCopyableType(eltType) then
+        compilerError('Cannot initialize ' + this.type:string + ' from ' +
+                      other.type:string + ' because element type ' +
+                      eltType:string + ' is not copyable');
+
+      for elem in other do _add(elem);
+    }
+
+    /*
       Print one node together with its children
     */
     pragma "no doc"
@@ -180,6 +238,10 @@ module Treap {
       ch.write(']');
     }
 
+    pragma "no doc"
+    proc ref _add(in x: eltType) lifetime this < x {
+      _insert(_root, x, nil);
+    }
 
     /*
       Add a copy of the element `x` to this set. Does nothing if this set
@@ -190,9 +252,9 @@ module Treap {
     proc ref add(in x: eltType) lifetime this < x {
 
       // Remove `on this` block because it prevents copy elision of `x` when
-      // passed to `_addElem`. See #15808.
+      // passed to `_add`. See #15808.
       _enter();
-      _insert(_root, x, nil);
+      _add(x);
       _leave();
     }
 

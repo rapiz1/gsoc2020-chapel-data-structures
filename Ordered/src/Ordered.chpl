@@ -65,4 +65,23 @@ module Ordered {
       instance.writeThis(ch);
     }
   }
+
+  /*
+    Clear the contents of this set, then extend this now empty set with the
+    elements contained in another set.
+
+    .. warning::
+
+      This will invalidate any references to elements previously contained in
+      `lhs`.
+
+    :arg lhs: The set to assign to.
+    :arg rhs: The set to assign from. 
+  */
+  proc =(ref lhs: orderedSet(?t), rhs: orderedSet(?r)) {
+    lhs.clear();
+    for x in rhs {
+      lhs.add(x);
+    }
+  }
 }

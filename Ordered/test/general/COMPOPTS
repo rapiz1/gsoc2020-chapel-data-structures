@@ -1,1 +1,1 @@
--simpl=orderedImpl.treap
+-simpl=orderedImpl.treap -M..

@@ -72,10 +72,9 @@ module Treap {
         }
       }
     }
-    proc destroy() {
+    proc deinit() {
       for child in children {
         if child != nil {
-          child!.destroy();
           delete child;
         }
       }
@@ -122,7 +121,7 @@ module Treap {
 
     proc deinit() {
       if _root != nil {
-        _root!.destroy();
+        delete _root;
       }
     }
 
@@ -172,23 +171,6 @@ module Treap {
       if node!.children[0] then ret[1] = node!.children[0]!.element;
       if node!.children[1] then ret[2] = node!.children[1]!.element;
       ch.write(ret);
-    }
-
-    /*
-      The current number of elements contained in this set.
-    */
-    inline proc const size {
-      var result = 0;
-
-      on this {
-        _enter();
-        if _root != nil {
-          result = _root.size;
-        }
-        _leave();
-      }
-
-      return result;
     }
 
     /*
@@ -250,7 +232,7 @@ module Treap {
 
       on this {
         _enter(); 
-        result = _find(_root, x) == nil;
+        result = _find(_root, x) != nil;
         _leave();
       }
 
@@ -409,7 +391,6 @@ module Treap {
       on this {
         _enter();
         if _root != nil {
-          _root!.destroy();
           delete _root;
           _root = nil;
         }

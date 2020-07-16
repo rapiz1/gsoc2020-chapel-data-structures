@@ -593,7 +593,7 @@ module Treap {
       :return: Whether or not this set and `other` are disjoint.
       :rtype: `bool`
     */
-    proc const isDisjoint(const ref other: treap(eltType, ?)): bool {
+    proc const isDisjoint(const ref other: orderedSet(eltType, ?)): bool {
       var result = true;
 
       on this {
@@ -621,7 +621,7 @@ module Treap {
       :return: Whether or not this set and `other` intersect.
       :rtype: `bool`
     */
-    proc const isIntersecting(const ref other: treap(eltType, ?)): bool {
+    proc const isIntersecting(const ref other: orderedSet(eltType, ?)): bool {
       return !isDisjoint(other);
     }
 

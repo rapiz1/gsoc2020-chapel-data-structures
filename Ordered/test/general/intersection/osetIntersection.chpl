@@ -35,7 +35,7 @@ proc doTest(type eltType) {
     assert(s1.contains(x) && s2.contains(x));
 
   for x in s1 do
-    try! s2.remove(x);
+    s2.remove(x);
 
   s4 = s2 & s3;
 

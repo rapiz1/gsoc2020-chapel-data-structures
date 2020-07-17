@@ -251,7 +251,7 @@ module Treap {
     }
 
     /*
-      The rotation will make the node.children[pos] becomes the new _root
+      The rotation will make the node.children[pos] becomes the new root
     */
     pragma "no doc"
     proc _rotate(ref node: nodeType, pos: int) {
@@ -454,7 +454,7 @@ module Treap {
     }
 
     /*
-      Find the first element in the treap
+      Find the first element in the set
        which does not compare less than e.
       Returns whether there is such an element
 
@@ -473,7 +473,7 @@ module Treap {
     }
 
     /*
-      Find the first element in the treap
+      Find the first element in the set
        which does not compare less than e.
       Returns whether there is such an element
 
@@ -492,7 +492,7 @@ module Treap {
     }
 
     /*
-      Find the predecessor of one element in the treap.
+      Find the predecessor of one element in the set.
       Returns if there is such one element.
       If there is, store the result in `result`.
 
@@ -523,7 +523,7 @@ module Treap {
     }
     
     /*
-      Find the successor of one element in the treap.
+      Find the successor of one element in the set.
       Returns if there is such one element.
       If there is, store the result in `result`.
 

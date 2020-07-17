@@ -29,7 +29,7 @@ proc doTest(type eltType) {
 
   for x in s1 do
     if s2.contains(x) then
-      try! s2.remove(x);
+      s2.remove(x);
 
   assert(!s1.isIntersecting(s2));
   assert(!s2.isIntersecting(s1));

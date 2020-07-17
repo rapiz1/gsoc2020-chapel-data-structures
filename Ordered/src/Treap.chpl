@@ -429,7 +429,7 @@ module Treap {
     }
 
     pragma "no doc"
-    proc const _lower_bound(node: nodeType, e: eltType) {
+    proc const _lower_bound(node: nodeType, e: eltType): nodeType {
       if node == nil then return nil;
       var cmp = _compare(e, node!.element);
       if cmp == 0 then return node;
@@ -442,7 +442,7 @@ module Treap {
     }
 
     pragma "no doc"
-    proc const _upper_bound(node: nodeType, e: eltType) {
+    proc const _upper_bound(node: nodeType, e: eltType): nodeType {
       if node == nil then return nil;
       var cmp = _compare(e, node!.element);
       if cmp >= 0 then return _upper_bound(node!.children[1], e);
@@ -464,12 +464,12 @@ module Treap {
       :returns: whether there is such an element
       :rtype: `bool`
     */
-    proc const lower_bound(e: eltType, out result: eltType): bool {
-      _enter();
+    proc const lowerBound(e: eltType, out result: eltType): bool {
+      _enter(); defer _leave();
       var node = _lower_bound(_root, e);
+      if node == nil then return false;
       result = node!.element;
-      _leave();
-      return node == nil;
+      return true;
     }
 
     /*
@@ -483,12 +483,12 @@ module Treap {
       :returns: whether there is such an element
       :rtype: `bool`
     */
-    proc const upper_bound(e: eltType, out result: eltType): bool {
-      _enter();
+    proc const upperBound(e: eltType, out result: eltType): bool {
+      _enter(); defer _leave();
       var node = _upper_bound(_root, e);
+      if node == nil then return false;
       result = node!.element;
-      _leave();
-      return node == nil;
+      return true;
     }
 
     /*

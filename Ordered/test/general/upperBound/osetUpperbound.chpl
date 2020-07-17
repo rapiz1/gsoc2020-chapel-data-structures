@@ -1,11 +1,8 @@
-/* FIXME: This is a workaround for testing upperBound. See https://github.com/chapel-lang/chapel/issues/16045
-  It should be in the general folder and targeted at the orderedSet, instead of Treap
-*/
-
-use Treap;
+use Ordered;
 use Random;
 use Sort;
 
+config param impl: orderedImpl;
 config const testIters = 128;
 
 /* Find upperBound in sorted arr */
@@ -20,7 +17,7 @@ proc upperBound(arr: [?d] int, target: int, out result): bool {
 }
 
 proc doTest(arr: [?d] int) {
-  var s1 = new treap(int, false, defaultComparator);
+  var s1 = new orderedSet(int, false, defaultComparator, impl);
 
   for x in arr {
     s1.add(x);

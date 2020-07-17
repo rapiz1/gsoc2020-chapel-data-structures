@@ -64,6 +64,32 @@ module Ordered {
     proc const writeThis(ch: channel) throws {
       instance.writeThis(ch);
     }
+
+    //FIXME: Workaround for https://github.com/chapel-lang/chapel/issues/16045
+    pragma "no doc"
+    proc const kth(k: int, out result: eltType): bool {
+      return instance.kth(k, result);
+    }
+
+    pragma "no doc"
+    proc const lowerBound(e: eltType, out result: eltType): bool {
+      return instance.lowerBound(e, result);
+    }
+
+    pragma "no doc"
+    proc const upperBound(e: eltType, out result: eltType): bool {
+      return instance.upperBound(e, result);
+    }
+
+    pragma "no doc"
+    proc const predecessor(e: eltType, out result: eltType) {
+      return instance.predecessor(e, result);
+    }
+
+    pragma "no doc"
+    proc const successor(e: eltType, out result: eltType) {
+      return instance.successor(e, result);
+    }
   }
 
   /*

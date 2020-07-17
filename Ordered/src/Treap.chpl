@@ -51,10 +51,11 @@ module Treap {
   }
 
   pragma "no doc"
-  proc _checkType(type eltType) {
-    /*
-      Keep this in case we want to check types in the future
-    */
+  proc _checkType(type t) {
+    if isGenericType(t) {
+      compilerWarning('creating a set with element type ' + t:string, 2);
+      compilerError('set element type cannot currently be generic', 2);
+    }
   }
 
   pragma "no doc"

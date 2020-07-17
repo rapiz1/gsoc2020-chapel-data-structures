@@ -553,6 +553,60 @@ module Treap {
       }
     }
 
+    pragma "no doc"
+    proc _kth(node: nodeType, in k: int): nodeType {
+      if node == nil then return nil;
+
+      /* The size of children
+         If nil then 0 ( which the default value for int )
+      */
+      var childSize: [0..#2] int;
+
+      if node!.children[0] != nil {
+        childSize[0] = node!.children[0]!.size;
+      }
+      if node!.children[1] != nil {
+        childSize[1] = node!.children[1]!.size;
+      }
+
+      // k-th in left subtree
+      if k <= childSize[0] then return _kth(node!.children[0], k);
+      k -= childSize[0];
+
+      // k-th is the current node
+      if k == 1 then return node;
+      k -= 1;
+
+      // k-th is in the right subtree
+      if k <= childSize[1] then return _kth(node!.children[1], k);
+
+      // else k-th is out of range, return nil
+      return nil;
+    }
+
+    /*
+      Find the k-th element in the set. k starts from 1.
+      Returns if there is such one element.
+      If there is, store the result in `result`.
+
+      :arg k: To find k-th element
+      :type k: `int`
+
+      :arg result: The destination to store the result
+      :type result: `eltType`
+
+      :return: if there is such one element
+      :rtype: `bool`
+    */
+    proc const kth(k: int, out result: eltType): bool {
+      _enter(); defer _leave();
+
+      var resultNode = _kth(_root, k);
+      if resultNode == nil then return false;
+      result = resultNode!.element;
+      return true;
+    }
+
     /*
       Returns the minimal element in the tree
     */

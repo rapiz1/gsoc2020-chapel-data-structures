@@ -56,6 +56,8 @@ module Treap {
       compilerWarning('creating a set with element type ' + t:string, 2);
       compilerError('set element type cannot currently be generic', 2);
     }
+    if isOwnedClass(t) then
+        compilerError('Sets do not support this class type: ' + t:string, 2);
   }
 
   pragma "no doc"

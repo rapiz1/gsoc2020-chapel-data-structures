@@ -3,29 +3,40 @@ module Ordered {
   private use Treap;
   private use IO;
   public use Sort only defaultComparator;
-  enum orderedImpl {treap, skipList};
+  enum setImpl {treap, skipList};
 
+  pragma "no doc"
   proc getTypeFromEnumVal(param val, type eltType, param parSafe) type {
-    if val == orderedImpl.treap then return treap(eltType, parSafe);
+    if val == setImpl.treap then return treap(eltType, parSafe);
     //FIXME: Use skipList when avaliable
-    if val == orderedImpl.skipList then return treap(eltType, parSafe);
-  }
-  proc getInstanceFromEnumVal(param val, type eltType, param parSafe, comparator: record = defaultComparator) {
-    if val == orderedImpl.treap then return new treap(eltType, parSafe, comparator);
-    //FIXME: Use skipList when avaliable
-    if val == orderedImpl.skipList then return new treap(eltType, parSafe, comparator);
+    if val == setImpl.skipList then return treap(eltType, parSafe);
   }
 
-  param _defaultImpl = orderedImpl.treap;
+  pragma "no doc"
+  proc getInstanceFromEnumVal(param val, type eltType, param parSafe, comparator: record = defaultComparator) {
+    if val == setImpl.treap then return new treap(eltType, parSafe, comparator);
+    //FIXME: Use skipList when avaliable
+    if val == setImpl.skipList then return new treap(eltType, parSafe, comparator);
+  }
+
+  /* The default implementation to use */
+  param _defaultImpl = setImpl.treap;
 
   record orderedSet {
+    /* The type of the elements contained in this set. */
     type eltType;
+
+    /* If `true`, this set will perform parallel safe operations. */
     param parSafe = false;
+
+    /* The implementation to use */
     param implType = _defaultImpl;
+
+    /* FIXME: This should be "no doc" but chpldoc will gives out an error */
     forwarding var instance: getTypeFromEnumVal(implType, eltType, parSafe);
 
     proc init(type eltType, param parSafe = false, comparator: record = defaultComparator,
-              param implType: orderedImpl = _defaultImpl) {
+              param implType: setImpl = _defaultImpl) {
       this.eltType = eltType;
       this.parSafe = parSafe;
       this.implType = implType;

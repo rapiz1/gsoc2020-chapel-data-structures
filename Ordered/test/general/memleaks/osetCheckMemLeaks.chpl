@@ -1,7 +1,7 @@
 use Ordered;
 use OsetTest;
 
-config param impl: orderedImpl;
+config param impl: setImpl;
 
 class C { var x: int = 0; }
 proc <(x: shared C?, y: shared C?) {

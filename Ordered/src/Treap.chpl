@@ -122,10 +122,27 @@ module Treap {
         }
     }
 
+    pragma "no doc"
     proc deinit() {
       if _root != nil {
         delete _root;
       }
+    }
+
+    /*
+      The current number of elements contained in this set.
+    */
+    inline proc const size {
+      var result = 0;
+
+      on this {
+        _enter();
+        if _root != nil then
+          result = _root!.size;
+        _leave();
+      }
+
+      return result;
     }
 
     /*
@@ -314,6 +331,7 @@ module Treap {
       }
     }
 
+    pragma "no doc"
     proc ref _remove(ref node: nodeType, const ref x: eltType): bool {
       if node == nil then return false;
       var cmp = _compare(x, node!.element);
@@ -458,7 +476,7 @@ module Treap {
 
     /*
       Find the first element in the set
-       which does not compare less than e.
+      which does not compare less than e.
       Returns whether there is such an element
 
       :arg result: The destination to store the result
@@ -477,7 +495,7 @@ module Treap {
 
     /*
       Find the first element in the set
-       which does not compare less than e.
+      which does not compare less than e.
       Returns whether there is such an element
 
       :arg result: The destination to store the result
@@ -705,22 +723,6 @@ module Treap {
       on this {
         _enter();
         result = _root == nil;
-        _leave();
-      }
-
-      return result;
-    }
-
-    /*
-      The current number of elements contained in this set.
-    */
-    inline proc const size {
-      var result = 0;
-
-      on this {
-        _enter();
-        if _root != nil then
-          result = _root!.size;
         _leave();
       }
 

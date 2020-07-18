@@ -1,5 +1,5 @@
 use Ordered;
-var t = new orderedSet(int, false, defaultComparator, orderedImpl.treap);
+var t = new orderedSet(int, false, defaultComparator, setImpl.treap);
 writeln(t);
 for i in 1..6 {
   t.add(i);

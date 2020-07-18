@@ -1,7 +1,7 @@
 use Ordered;
 use OsetTest;
 
-config param impl: orderedImpl;
+config param impl: setImpl;
 
 var s1 = new orderedSet(int, false, defaultComparator, impl);
 var s2 = new orderedSet(testRecord, false, defaultComparator, impl);

@@ -1,5 +1,5 @@
 use Ordered;
-config param impl: orderedImpl;
+config param impl: setImpl;
 var oset = new orderedSet(int, false, defaultComparator, impl);
 writeln(oset.isEmpty());
 oset.add(1);

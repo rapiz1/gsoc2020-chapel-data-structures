@@ -2,7 +2,7 @@ use Ordered;
 use Random;
 use Sort;
 
-config param impl: orderedImpl;
+config param impl: setImpl;
 config const testIters = 128;
 
 proc lowerBound(arr: [?d] int, target: int, out result): bool {

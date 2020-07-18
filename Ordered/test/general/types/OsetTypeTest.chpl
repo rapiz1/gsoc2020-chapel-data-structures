@@ -1,6 +1,6 @@
 use Ordered;
 
-config param impl: orderedImpl;
+config param impl: setImpl;
 
 proc testSet(type t) where isTuple(t) {
   var s = new orderedSet(t, false, defaultComparator, impl);

@@ -1,7 +1,7 @@
 use Ordered;
 use Random;
 use Sort;
-config param impl: orderedImpl;
+config param impl: setImpl;
 config param testIters = 137;
 var oset = new orderedSet(int, false, defaultComparator, impl);
 var a: [0..#testIters] int;

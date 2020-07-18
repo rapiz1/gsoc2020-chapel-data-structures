@@ -1,7 +1,7 @@
 use Ordered;
 use OsetTest;
 
-config param impl: orderedImpl;
+config param impl: setImpl;
 config const testIters = 8;
 
 

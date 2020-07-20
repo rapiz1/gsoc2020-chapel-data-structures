@@ -199,18 +199,6 @@ module Treap {
     }
 
     /*
-      Print one node together with its children
-    */
-    pragma "no doc"
-    proc const _writeNode(node: nodeType, ch: channel) throws {
-      var ret:(int, int, int);
-      ret[0] = node!.element;
-      if node!.children[0] then ret[1] = node!.children[0]!.element;
-      if node!.children[1] then ret[2] = node!.children[1]!.element;
-      ch.write(ret);
-    }
-
-    /*
       Visit elements in the left child, root, right child order
     */
     pragma "no doc"

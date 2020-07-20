@@ -211,7 +211,7 @@ module Ordered {
     var result = new orderedSet(t, (a.parSafe || b.parSafe));
 
     if a.parSafe && b.parSafe {
-      forall x in a do
+      for x in a do
         if !b.contains(x) then
           result.add(x);
     } else {
@@ -236,7 +236,7 @@ module Ordered {
   */
   proc -=(ref lhs: orderedSet(?t), const ref rhs: orderedSet(t)) {
     if lhs.parSafe && rhs.parSafe {
-      forall x in rhs do
+      for x in rhs do
         lhs.remove(x);
     } else {
       for x in rhs do
@@ -259,7 +259,7 @@ module Ordered {
     /* Iterate over the smaller set */
     if a.size <= b.size {
       if a.parSafe && b.parSafe {
-        forall x in a do
+        for x in a do
           if b.contains(x) then
             result.add(x);
       } else {
@@ -269,7 +269,7 @@ module Ordered {
       }
     } else {
       if a.parSafe && b.parSafe {
-        forall x in b do
+        for x in b do
           if a.contains(x) then
             result.add(x);
       } else {
@@ -302,7 +302,7 @@ module Ordered {
       var result: orderedSet(t, (lhs.parSafe || rhs.parSafe));
 
       if lhs.parSafe && rhs.parSafe {
-        forall x in lhs do
+        for x in lhs do
           if rhs.contains(x) then
             result.add(x);
       } else {
@@ -313,7 +313,7 @@ module Ordered {
       lhs = result;
     } else {
       if lhs.parSafe && rhs.parSafe {
-        forall x in rhs do
+        for x in rhs do
           lhs.remove(x);
       } else {
         for x in rhs do
@@ -361,7 +361,7 @@ module Ordered {
   */
   proc ^=(ref lhs: orderedSet(?t), const ref rhs: orderedSet(t)) {
     if lhs.parSafe && rhs.parSafe {
-      forall x in rhs {
+      for x in rhs {
         if lhs.contains(x) {
           lhs.remove(x);
         } else {
@@ -396,7 +396,7 @@ module Ordered {
     var result = true;
 
     if a.parSafe && b.parSafe {
-      forall x in a do
+      for x in a do
         if !b.contains(x) then
           result = false;
     } else {
@@ -453,7 +453,7 @@ module Ordered {
 
     // TODO: Do we need to guard/make result atomic here?
     if a.parSafe && b.parSafe {
-      forall x in a do
+      for x in a do
         if !b.contains(x) then
           result = false;
     } else {
@@ -496,7 +496,7 @@ module Ordered {
     var result = true;
 
     if a.parSafe && b.parSafe {
-      forall x in b do
+      for x in b do
         if !a.contains(x) then
           result = false;
     } else {

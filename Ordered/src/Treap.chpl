@@ -277,7 +277,7 @@ module Treap {
     }
 
     /*
-      Helper procedure to make x becomes a child of y, in position pos
+      Helper procedure to make x become a child of y, in position pos
     */
     pragma "no doc"
     proc _link(x: nodeType, y: nodeType, pos: int) {
@@ -289,6 +289,7 @@ module Treap {
 
     /*
       The rotation will make the node.children[pos] becomes the new root
+      Note that the rotation will change the value of node passed in
     */
     pragma "no doc"
     proc _rotate(ref node: nodeType, pos: int) {

@@ -361,21 +361,21 @@ module Treap {
           return true;
         }
 
-        // Choose one non-nil child
+        // Choose the child with the greater rank
         var childPos = 0;
-        if children[childPos] == nil {
-          childPos ^= 1;
-        }
-
-        // Choose the one with greater rank
-        if children[childPos^1] != nil {
-          var anotherChildPos = childPos^1;
-          if children[anotherChildPos]!.rank > children[childPos]!.rank {
-            childPos = anotherChildPos;
+        if children[0] == nil {
+          childPos = 1;
+        } else {
+          if children[1] != nil {
+            if children[1]!.rank > children[0]!.rank {
+              childPos = 1;
+            }
           }
         }
 
+
         // Rotate the root down
+        // Note that _rotate will change the value of node
         _rotate(node, childPos);
 
         // Remove the old root recursively
@@ -395,11 +395,6 @@ module Treap {
       Attempt to remove the item from this set with a value equal to `x`. If
       an element equal to `x` was removed from this set, return `true`, else
       return `false` if no such value was found.
-
-      .. warning::
-
-        Removing an element from this set may invalidate existing references
-        to the elements contained in this set.
 
       :arg x: The element to remove.
       :return: Whether or not an element equal to `x` was removed.
@@ -453,6 +448,7 @@ module Treap {
         while node != nil && node!.children[direction] != nil {
           node = node!.children[direction];
         }
+        return node;
       }
       else {
         // node doesn't have right child,
@@ -463,7 +459,6 @@ module Treap {
         }
         return node!.parent;
       }
-      return node;
     }
 
     pragma "no doc"

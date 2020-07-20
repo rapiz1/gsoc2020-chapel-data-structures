@@ -40,14 +40,15 @@ module Treap {
     }
   }
 
+  pragma "no doc"
+  var _treapRandomStream = new RandomStream(int);
+
   /*
     Helper procedure to get one random int
   */
   pragma "no doc"
   proc _random(): int {
-    var rand: [0..0] int;
-    fillRandom(rand);
-    return rand[0];
+    return _treapRandomStream.getNext();
   }
 
   pragma "no doc"

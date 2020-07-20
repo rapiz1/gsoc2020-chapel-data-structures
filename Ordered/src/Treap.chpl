@@ -15,17 +15,14 @@ module Treap {
 
   // The locker is borrowed from List.chpl
   // 
-  // We can change the lock type later. Use a spinlock for now, even if it
-  // is suboptimal in cases where long critical sections have high
-  // contention (IE, lots of tasks trying to insert into the middle of this
-  // list, or any operation that is O(n)).
+  // We can change the lock type later. Use a spinlock for now.
   //
   pragma "no doc"
   type _lockType = ChapelLocks.chpl_LocalSpinlock;
 
   //
   // Use a wrapper class to let heap methods have a const ref receiver even
-  // when `parSafe` is `true` and the list lock is used.
+  // when `parSafe` is `true` and the set lock is used.
   //
   pragma "no doc"
   class _LockWrapper {

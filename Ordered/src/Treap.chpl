@@ -83,7 +83,7 @@ module Treap {
     var element: eltType;
     var rank, size: int;
     var parent: unmanaged _treapNode(eltType)?;
-    var children: [0..1] unmanaged _treapNode(eltType)?;
+    var children: (unmanaged _treapNode(eltType)?, unmanaged _treapNode(eltType)?);
     proc update() {
       size = 1;
       for child in children {
@@ -384,7 +384,7 @@ module Treap {
         return result;
       }
       else {
-        var pos = cmp > 0;
+        var pos: int = cmp > 0;
         var result = _remove(node!.children[pos], x);
         node!.update();
         return result;

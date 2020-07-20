@@ -210,15 +210,9 @@ module Ordered {
   proc -(const ref a: orderedSet(?t), const ref b: orderedSet(t)): orderedSet(t) {
     var result = new orderedSet(t, (a.parSafe || b.parSafe));
 
-    if a.parSafe && b.parSafe {
-      for x in a do
-        if !b.contains(x) then
-          result.add(x);
-    } else {
-      for x in a do
-        if !b.contains(x) then
-          result.add(x);
-    }
+    for x in a do
+      if !b.contains(x) then
+        result.add(x);
 
     return result;
   }
@@ -235,13 +229,8 @@ module Ordered {
     :arg rhs: A set to take the difference of.
   */
   proc -=(ref lhs: orderedSet(?t), const ref rhs: orderedSet(t)) {
-    if lhs.parSafe && rhs.parSafe {
-      for x in rhs do
-        lhs.remove(x);
-    } else {
-      for x in rhs do
-        lhs.remove(x);
-    }
+    for x in rhs do
+      lhs.remove(x);
   }
 
   /*
@@ -258,25 +247,13 @@ module Ordered {
 
     /* Iterate over the smaller set */
     if a.size <= b.size {
-      if a.parSafe && b.parSafe {
-        for x in a do
-          if b.contains(x) then
-            result.add(x);
-      } else {
-        for x in a do
-          if b.contains(x) then
-            result.add(x);
-      }
+      for x in a do
+        if b.contains(x) then
+          result.add(x);
     } else {
-      if a.parSafe && b.parSafe {
-        for x in b do
-          if a.contains(x) then
-            result.add(x);
-      } else {
-        for x in b do
-          if a.contains(x) then
-            result.add(x);
-      }
+      for x in b do
+        if a.contains(x) then
+          result.add(x);
     }
 
     return result;
@@ -294,32 +271,16 @@ module Ordered {
     :arg lhs: A set to take the intersection of and then assign to.
     :arg rhs: A set to take the intersection of.
   */
-  proc &=(ref lhs: orderedSet(?t), const ref rhs: orderedSet(t)) {
-    /* Iterate over the smaller set.  But we can't remove things from
-       lhs while iterating over it.  So use a temporary if lhs is
-       significantly smaller than rhs; otherwise just iterate over rhs. */
-    if lhs.size < 2 * rhs.size {
-      var result: orderedSet(t, (lhs.parSafe || rhs.parSafe));
+  proc &=(ref lhs: orderedSet(?t, ?), const ref rhs: orderedSet(t, ?)) {
+    /* We can't remove things from lhs while iterating over it, so
+     * use a temporary. */
+    var result: orderedSet(t, (lhs.parSafe || rhs.parSafe));
 
-      if lhs.parSafe && rhs.parSafe {
-        for x in lhs do
-          if rhs.contains(x) then
-            result.add(x);
-      } else {
-        for x in lhs do
-          if rhs.contains(x) then
-            result.add(x);
-      }
-      lhs = result;
-    } else {
-      if lhs.parSafe && rhs.parSafe {
-        for x in rhs do
-          lhs.remove(x);
-      } else {
-        for x in rhs do
-          lhs.remove(x);
-      }
-    }
+    for x in lhs do
+      if rhs.contains(x) then
+        result.add(x);
+
+    lhs = result;
   }
 
   /*
@@ -360,21 +321,11 @@ module Ordered {
     :arg rhs: A set to take the symmetric difference of.
   */
   proc ^=(ref lhs: orderedSet(?t), const ref rhs: orderedSet(t)) {
-    if lhs.parSafe && rhs.parSafe {
-      for x in rhs {
-        if lhs.contains(x) {
-          lhs.remove(x);
-        } else {
-          lhs.add(x);
-        }
-      }
-    } else {
-      for x in rhs {
-        if lhs.contains(x) {
-          lhs.remove(x);
-        } else {
-          lhs.add(x);
-        }
+    for x in rhs {
+      if lhs.contains(x) {
+        lhs.remove(x);
+      } else {
+        lhs.add(x);
       }
     }
   }
@@ -395,15 +346,9 @@ module Ordered {
 
     var result = true;
 
-    if a.parSafe && b.parSafe {
-      for x in a do
-        if !b.contains(x) then
-          result = false;
-    } else {
-      for x in a do
-        if !b.contains(x) then
-          return false;
-    }
+    for x in a do
+      if !b.contains(x) then
+        return false;
 
     return result;
   }
@@ -451,16 +396,9 @@ module Ordered {
 
     var result = true;
 
-    // TODO: Do we need to guard/make result atomic here?
-    if a.parSafe && b.parSafe {
-      for x in a do
-        if !b.contains(x) then
-          result = false;
-    } else {
-      for x in a do
-        if !b.contains(x) then
-          return false;
-    }
+    for x in a do
+      if !b.contains(x) then
+        return false;
 
     return result;
   }
@@ -495,15 +433,9 @@ module Ordered {
 
     var result = true;
 
-    if a.parSafe && b.parSafe {
-      for x in b do
-        if !a.contains(x) then
-          result = false;
-    } else {
-      for x in b do
-        if !a.contains(x) then
-          return false;
-    }
+    for x in b do
+      if !a.contains(x) then
+        return false;
 
     return result;
   }

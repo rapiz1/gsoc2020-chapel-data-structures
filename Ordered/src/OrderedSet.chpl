@@ -17,46 +17,69 @@
  * limitations under the License.
  */
 
-/* Documentation for Ordered */
+/*
+  This module contains the implementation of the orderedSet type.
+
+  An orderedSet is a collection of unique elements. orderSets are ordered.
+
+  All references to orderedSet elements are invalidated when the orderedSet is cleared 
+  or deinitialized.
+
+  orderedSet are not parallel safe by default, but can be made parallel safe by 
+  setting the param formal `parSafe` to true in any orderedSet constructor.
+
+  When constructed from another orderedSet, 
+  the new orderedSet will inherit the parallel safety mode 
+  of its originating orderedSet.
+*/
 module OrderedSet {
   include module Treap;
   private use Treap;
   private use IO;
   public use Sort only defaultComparator;
-  enum setImpl {treap, skipList};
+
+
+  //TODO: Maybe add skipList in the future
+  /* Implementations supported */
+  enum setImpl {treap};
 
   pragma "no doc"
   proc getTypeFromEnumVal(param val, type eltType, param parSafe) type {
     if val == setImpl.treap then return treap(eltType, parSafe);
-    //FIXME: Use skipList when avaliable
-    if val == setImpl.skipList then return treap(eltType, parSafe);
   }
 
   pragma "no doc"
   proc getInstanceFromEnumVal(param val, type eltType, param parSafe, comparator: record = defaultComparator) {
     if val == setImpl.treap then return new treap(eltType, parSafe, comparator);
-    //FIXME: Use skipList when avaliable
-    if val == setImpl.skipList then return new treap(eltType, parSafe, comparator);
   }
 
   /* The default implementation to use */
-  param _defaultImpl = setImpl.treap;
+  param defaultImpl = setImpl.treap;
 
   record orderedSet {
-    /* The type of the elements contained in this set. */
+    /* The type of the elements contained in this orderedSet. */
     type eltType;
 
-    /* If `true`, this set will perform parallel safe operations. */
+    /* If `true`, this orderedSet will perform parallel safe operations. */
     param parSafe = false;
 
     /* The implementation to use */
-    param implType = _defaultImpl;
+    param implType = defaultImpl;
 
-    /* FIXME: This should be "no doc" but chpldoc will gives out an error */
+    //TODO: Should this documented?
+    /* The underlying implementation */
     forwarding var instance: getTypeFromEnumVal(implType, eltType, parSafe);
 
+    /*
+      Initializes an empty orderedSet containing elements of the given type.
+
+      :arg eltType: The type of the elements of this orderedSet.
+      :arg parSafe: If `true`, this orderedSet will use parallel safe operations.
+      :type parSafe: bool
+      :arg comparator: The comparator used to compare elements.
+    */
     proc init(type eltType, param parSafe = false, comparator: record = defaultComparator,
-              param implType: setImpl = _defaultImpl) {
+              param implType: setImpl = defaultImpl) {
       this.eltType = eltType;
       this.parSafe = parSafe;
       this.implType = implType;
@@ -65,11 +88,11 @@ module OrderedSet {
     }
 
     /*
-      Initialize this set with a copy of each of the elements contained in
-      the set `other`. This set will inherit the `parSafe` value of the
-      set `other`.
+      Initialize this orderedSet with a copy of each of the elements contained in
+      the orderedSet `other`. This orderedSet will inherit the `parSafe` value of the
+      orderedSet `other`.
 
-      :arg other: A set to initialize this set with.
+      :arg other: An orderedSet to initialize this orderedSet with.
     */
     proc init=(const ref other: orderedSet(?t)) lifetime this < other {
       this.eltType = t;
@@ -88,7 +111,7 @@ module OrderedSet {
     }
 
     /*
-      Write the contents of this set to a channel.
+      Write the contents of this orderedSet to a channel.
 
       :arg ch: A channel to write to.
     */
@@ -128,16 +151,16 @@ module OrderedSet {
   */
 
   /*
-    Clear the contents of this set, then extend this now empty set with the
-    elements contained in another set.
+    Clear the contents of this orderedSet, then extend this now empty orderedSet with the
+    elements contained in another orderedSet.
 
     .. warning::
 
       This will invalidate any references to elements previously contained in
       `lhs`.
 
-    :arg lhs: The set to assign to.
-    :arg rhs: The set to assign from. 
+    :arg lhs: The orderedSet to assign to.
+    :arg rhs: The orderedSet to assign from. 
   */
   proc =(ref lhs: orderedSet(?t), rhs: orderedSet(?r)) {
     lhs.clear();
@@ -147,12 +170,12 @@ module OrderedSet {
   }
 
   /*
-    Return a new set that contains the union of two sets.
+    Return a new orderedSet that contains the union of two sets.
 
-    :arg a: A set to take the union of.
-    :arg b: A set to take the union of.
+    :arg a: An orderedSet to take the union of.
+    :arg b: An orderedSet to take the union of.
 
-    :return: A new set containing the union between `a` and `b`.
+    :return: A new orderedSet containing the union between `a` and `b`.
     :rtype: `orderedSet(?t)`
   */
   proc |(const ref a: orderedSet(?t), const ref b: orderedSet(t)): orderedSet(t) {
@@ -165,10 +188,10 @@ module OrderedSet {
   }
 
   /*
-    Add to the set `lhs` all the elements of `rhs`.
+    Add to the orderedSet `lhs` all the elements of `rhs`.
 
-    :arg lhs: A set to take the union of and then assign to.
-    :arg rhs: A set to take the union of.
+    :arg lhs: An orderedSet to take the union of and then assign to.
+    :arg rhs: An orderedSet to take the union of.
   */
   proc |=(ref lhs: orderedSet(?t), const ref rhs: orderedSet(t)) {
     for x in rhs do
@@ -176,13 +199,13 @@ module OrderedSet {
   }
 
   /*
-    Return a new set that contains the union of two sets. Alias for the `|`
+    Return a new orderedSet that contains the union of two sets. Alias for the `|`
     operator.
 
-    :arg a: A set to take the union of.
-    :arg b: A set to take the union of.
+    :arg a: An orderedSet to take the union of.
+    :arg b: An orderedSet to take the union of.
 
-    :return: A new set containing the union between `a` and `b`.
+    :return: A new orderedSet containing the union between `a` and `b`.
     :rtype: `orderedSet(?t)`
   */
   proc +(const ref a: orderedSet(?t), const ref b: orderedSet(t)): orderedSet(t) {
@@ -190,22 +213,22 @@ module OrderedSet {
   }
 
   /*
-    Add to the set `lhs` all the elements of `rhs`.
+    Add to the orderedSet `lhs` all the elements of `rhs`.
 
-    :arg lhs: A set to take the union of and then assign to.
-    :arg rhs: A set to take the union of.
+    :arg lhs: An orderedSet to take the union of and then assign to.
+    :arg rhs: An orderedSet to take the union of.
   */
   proc +=(ref lhs: orderedSet(?t), const ref rhs: orderedSet(t)) {
     lhs |= rhs;
   }
 
   /*
-    Return a new set that contains the difference of two sets.
+    Return a new orderedSet that contains the difference of two sets.
 
-    :arg a: A set to take the difference of.
-    :arg b: A set to take the difference of.
+    :arg a: An orderedSet to take the difference of.
+    :arg b: An orderedSet to take the difference of.
 
-    :return: A new set containing the difference between `a` and `b`.
+    :return: A new orderedSet containing the difference between `a` and `b`.
     :rtype: `orderedSet(t)`
   */
   proc -(const ref a: orderedSet(?t), const ref b: orderedSet(t)): orderedSet(t) {
@@ -219,15 +242,15 @@ module OrderedSet {
   }
 
   /*
-    Remove from the set `lhs` the elements of `rhs`.
+    Remove from the orderedSet `lhs` the elements of `rhs`.
 
     .. warning::
 
       This will invalidate any references to elements previously contained in
-      the set `lhs`.
+      the orderedSet `lhs`.
 
-    :arg lhs: A set to take the difference of and then assign to.
-    :arg rhs: A set to take the difference of.
+    :arg lhs: An orderedSet to take the difference of and then assign to.
+    :arg rhs: An orderedSet to take the difference of.
   */
   proc -=(ref lhs: orderedSet(?t), const ref rhs: orderedSet(t)) {
     for x in rhs do
@@ -235,18 +258,18 @@ module OrderedSet {
   }
 
   /*
-    Return a new set that contains the intersection of two sets.
+    Return a new orderedSet that contains the intersection of two sets.
 
-    :arg a: A set to take the intersection of.
-    :arg b: A set to take the intersection of.
+    :arg a: An orderedSet to take the intersection of.
+    :arg b: An orderedSet to take the intersection of.
 
-    :return: A new set containing the intersection of `a` and `b`.
+    :return: A new orderedSet containing the intersection of `a` and `b`.
     :rtype: `orderedSet(t)`
   */
   proc &(const ref a: orderedSet(?t), const ref b: orderedSet(t)): orderedSet(t) {
     var result: orderedSet(t, (a.parSafe || b.parSafe));
 
-    /* Iterate over the smaller set */
+    /* Iterate over the smaller orderedSet */
     if a.size <= b.size {
       for x in a do
         if b.contains(x) then
@@ -261,16 +284,16 @@ module OrderedSet {
   }
 
   /*
-    Assign to the set `lhs` the set that is the intersection of `lhs` and
+    Assign to the orderedSet `lhs` the orderedSet that is the intersection of `lhs` and
     `rhs`.
 
     .. warning::
 
       This will invalidate any references to elements previously contained in
-      the set `lhs`.
+      the orderedSet `lhs`.
 
-    :arg lhs: A set to take the intersection of and then assign to.
-    :arg rhs: A set to take the intersection of.
+    :arg lhs: An orderedSet to take the intersection of and then assign to.
+    :arg rhs: An orderedSet to take the intersection of.
   */
   proc &=(ref lhs: orderedSet(?t, ?), const ref rhs: orderedSet(t, ?)) {
     /* We can't remove things from lhs while iterating over it, so
@@ -287,17 +310,17 @@ module OrderedSet {
   /*
     Return the symmetric difference of two sets.
 
-    :arg a: A set to take the symmetric difference of.
-    :arg b: A set to take the symmetric difference of.
+    :arg a: An orderedSet to take the symmetric difference of.
+    :arg b: An orderedSet to take the symmetric difference of.
 
-    :return: A new set containing the symmetric difference of `a` and `b`.
+    :return: A new orderedSet containing the symmetric difference of `a` and `b`.
     :rtype: `orderedSet(?t)`
   */
   proc ^(const ref a: orderedSet(?t), const ref b: orderedSet(t)): orderedSet(t) {
     var result: orderedSet(t, (a.parSafe || b.parSafe));
 
     /* Expect the loop in ^= to be more expensive than the loop in =,
-       so arrange for the rhs of the ^= to be the smaller set. */
+       so arrange for the rhs of the ^= to be the smaller orderedSet. */
     if a.size <= b.size {
       result = b;
       result ^= a;
@@ -310,16 +333,16 @@ module OrderedSet {
   }
 
   /*
-    Assign to the set `lhs` the set that is the symmetric difference of `lhs`
+    Assign to the orderedSet `lhs` the orderedSet that is the symmetric difference of `lhs`
     and `rhs`.
 
     .. warning::
 
       This will invalidate any references to elements previously contained in
-      the set `lhs`.
+      the orderedSet `lhs`.
 
-    :arg lhs: A set to take the symmetric difference of and then assign to.
-    :arg rhs: A set to take the symmetric difference of.
+    :arg lhs: An orderedSet to take the symmetric difference of and then assign to.
+    :arg rhs: An orderedSet to take the symmetric difference of.
   */
   proc ^=(ref lhs: orderedSet(?t), const ref rhs: orderedSet(t)) {
     for x in rhs {
@@ -335,8 +358,8 @@ module OrderedSet {
     Return `true` if the sets `a` and `b` are equal. That is, they are the
     same size and contain the same elements.
 
-    :arg a: A set to compare.
-    :arg b: A set to compare.
+    :arg a: An orderedSet to compare.
+    :arg b: An orderedSet to compare.
 
     :return: `true` if two sets are equal.
     :rtype: `bool`
@@ -357,8 +380,8 @@ module OrderedSet {
   /*
     Return `true` if the sets `a` and `b` are not equal.
 
-    :arg a: A set to compare.
-    :arg b: A set to compare.
+    :arg a: An orderedSet to compare.
+    :arg b: An orderedSet to compare.
 
     :return: `true` if two sets are not equal.
     :rtype: `bool`
@@ -370,8 +393,8 @@ module OrderedSet {
   /*
     Return `true` if `a` is a proper subset of `b`.
 
-    :arg a: A set to compare.
-    :arg b: A set to compare.
+    :arg a: An orderedSet to compare.
+    :arg b: An orderedSet to compare.
 
     :return: `true` if `a` is a proper subset of `b`.
     :rtype: `bool`
@@ -385,8 +408,8 @@ module OrderedSet {
   /*
     Return `true` if `a` is a subset of `b`.
 
-    :arg a: A set to compare.
-    :arg b: A set to compare.
+    :arg a: An orderedSet to compare.
+    :arg b: An orderedSet to compare.
 
     :return: `true` if `a` is a subset of `b`.
     :rtype: `bool`
@@ -407,8 +430,8 @@ module OrderedSet {
   /*
     Return `true` if `a` is a proper superset of `b`.
 
-    :arg a: A set to compare.
-    :arg b: A set to compare.
+    :arg a: An orderedSet to compare.
+    :arg b: An orderedSet to compare.
 
     :return: `true` if `a` is a proper superset of `b`.
     :rtype: `bool`
@@ -422,8 +445,8 @@ module OrderedSet {
   /*
     Return `true` if `a` is a superset of `b`.
 
-    :arg a: A set to compare.
-    :arg b: A set to compare.
+    :arg a: An orderedSet to compare.
+    :arg b: An orderedSet to compare.
 
     :return: `true` if `a` is a superset of `b`.
     :rtype: `bool`

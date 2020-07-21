@@ -35,6 +35,7 @@
 module OrderedSet {
   include module Treap;
   private use Treap;
+  private use Reflection;
   private use IO;
   public use Sort only defaultComparator;
 
@@ -49,8 +50,18 @@ module OrderedSet {
   }
 
   pragma "no doc"
-  proc getInstanceFromEnumVal(param val, type eltType, param parSafe, comparator: record = defaultComparator) {
+  proc getInstanceFromEnumVal(param val, type eltType, param parSafe,
+                              comparator: record = defaultComparator) {
     if val == setImpl.treap then return new treap(eltType, parSafe, comparator);
+  }
+
+  pragma "no doc"
+  proc getInstanceFromEnumVal(param val, type eltType, iterable, param parSafe,
+                              comparator: record = defaultComparator)
+                              where canResolveMethod(iterable, "these") {
+    if val == setImpl.treap {
+       return new treap(eltType, iterable, parSafe, comparator);
+    }
   }
 
   /* The default implementation to use */
@@ -78,13 +89,36 @@ module OrderedSet {
       :type parSafe: bool
       :arg comparator: The comparator used to compare elements.
     */
-    proc init(type eltType, param parSafe = false, comparator: record = defaultComparator,
+    proc init(type eltType, param parSafe = false,
+              comparator: record = defaultComparator,
               param implType: setImpl = defaultImpl) {
       this.eltType = eltType;
       this.parSafe = parSafe;
       this.implType = implType;
 
       this.instance = getInstanceFromEnumVal(implType, eltType, parSafe, comparator); 
+    }
+
+    /*
+      Initialize this orderedSet with a unique copy of each element contained in
+      `iterable`. If an element from `iterable` is already contained in this
+      orderedSet, it will not be added again. The formal `iterable` must be a type
+      with an iterator named "these" defined for it.
+
+      :arg iterable: A collection of elements to add to this orderedSet.
+      :arg parSafe: If `true`, this orderedSet will use parallel safe operations.
+      :arg comparator: The comparator used to compare elements.
+    */
+    proc init(type eltType, iterable, param parSafe=false,
+              comparator: record = defaultComparator,
+              param implType: setImpl = defaultImpl)
+    where canResolveMethod(iterable, "these") lifetime this < iterable {
+      this.eltType = eltType;
+      this.parSafe = parSafe;
+      this.implType = implType;
+
+      this.instance = getInstanceFromEnumVal(implType, eltType, iterable,
+                                            parSafe, comparator); 
     }
 
     /*

@@ -1,4 +1,4 @@
-use Ordered;
+use OrderedSet;
 var t = new orderedSet(int, false, defaultComparator, setImpl.treap);
 writeln(t);
 for i in 1..6 {

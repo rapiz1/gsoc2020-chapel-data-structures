@@ -1,4 +1,4 @@
-use Ordered;
+use OrderedSet;
 use OsetTest;
 
 config param impl: setImpl;

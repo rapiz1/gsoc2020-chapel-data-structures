@@ -27,7 +27,7 @@ module Treap {
   private use Sort;
   private use Random;
   private use IO;
-  private use Ordered only orderedSet;
+  private use OrderedSet only orderedSet;
 
   pragma "no doc"
   private param _sanityChecks = true;

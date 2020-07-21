@@ -1,4 +1,4 @@
-use Ordered;
+use OrderedSet;
 use Random;
 use Sort;
 config param impl: setImpl;

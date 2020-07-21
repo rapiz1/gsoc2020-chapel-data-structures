@@ -1,4 +1,4 @@
-use Ordered;
+use OrderedSet;
 
 config param impl: setImpl;
 

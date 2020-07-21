@@ -18,7 +18,8 @@
  */
 
 /* Documentation for Ordered */
-module Ordered {
+module OrderedSet {
+  include module Treap;
   private use Treap;
   private use IO;
   public use Sort only defaultComparator;

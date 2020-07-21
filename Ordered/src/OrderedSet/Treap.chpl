@@ -28,6 +28,7 @@ module Treap {
   private use Sort;
   private use Random;
   private use IO;
+  private use Reflection;
   private use OrderedSet only orderedSet;
 
   pragma "no doc"

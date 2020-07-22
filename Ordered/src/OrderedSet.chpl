@@ -22,8 +22,8 @@
 
   An orderedSet is a collection of unique elements. orderSets are ordered.
 
-  All references to orderedSet elements are invalidated when the orderedSet is cleared 
-  or deinitialized.
+  All references to orderedSet elements are invalidated when the orderedSet is 
+  cleared or deinitialized.
 
   orderedSet are not parallel safe by default, but can be made parallel safe by 
   setting the param formal `parSafe` to true in any orderedSet constructor.
@@ -123,15 +123,17 @@ module OrderedSet {
 
     /*
       Initialize this orderedSet with a copy of each of the elements contained in
-      the orderedSet `other`. This orderedSet will inherit the `parSafe` value of the
-      orderedSet `other`.
+      the orderedSet `other`. This orderedSet will inherit the `parSafe` value of 
+      the orderedSet `other`.
 
       :arg other: An orderedSet to initialize this orderedSet with.
     */
     proc init=(const ref other: orderedSet(?t)) lifetime this < other {
       this.eltType = t;
       this.parSafe = other.parSafe;
-      this.instance = getInstanceFromEnumVal(this.implType, this.eltType, this.parSafe, other.instance.comparator); 
+      this.instance = getInstanceFromEnumVal(this.implType, this.eltType,
+                                            this.parSafe,
+                                            other.instance.comparator); 
 
       this.complete();
 
@@ -185,8 +187,8 @@ module OrderedSet {
   */
 
   /*
-    Clear the contents of this orderedSet, then extend this now empty orderedSet with the
-    elements contained in another orderedSet.
+    Clear the contents of this orderedSet, then extend this now empty orderedSet 
+    with the elements contained in another orderedSet.
 
     .. warning::
 
@@ -318,8 +320,8 @@ module OrderedSet {
   }
 
   /*
-    Assign to the orderedSet `lhs` the orderedSet that is the intersection of `lhs` and
-    `rhs`.
+    Assign to the orderedSet `lhs` the orderedSet that is the intersection of `lhs` 
+    and `rhs`.
 
     .. warning::
 
@@ -367,8 +369,8 @@ module OrderedSet {
   }
 
   /*
-    Assign to the orderedSet `lhs` the orderedSet that is the symmetric difference of `lhs`
-    and `rhs`.
+    Assign to the orderedSet `lhs` the orderedSet that is the symmetric difference
+    of `lhs` and `rhs`.
 
     .. warning::
 

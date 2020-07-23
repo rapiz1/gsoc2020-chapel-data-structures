@@ -282,6 +282,7 @@ module OrderedMap {
       _enter(); defer _leave();
 
       var result: (valType, shared _valueWrapper?);
+      //FIXME:
       var found = instance.lowerBound((k, nil), result);
       if !found then
         boundsCheckHalt("map index " + k:string + " out of bounds");

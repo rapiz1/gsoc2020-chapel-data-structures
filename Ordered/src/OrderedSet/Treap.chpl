@@ -306,7 +306,7 @@ module Treap {
       Helper procedure to locate a certain node
     */
     pragma "no doc"
-    proc _find(const node: nodeType, element: eltType): nodeType
+    proc const _find(const node: nodeType, element: eltType): nodeType
     lifetime return node {
       if node == nil then return node;
       var cmp = chpl_compare(element, node!.element, comparator);

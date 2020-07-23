@@ -529,5 +529,67 @@ module OrderedMap {
       _enter(); defer _leave();
       return _set.remove((k, nil));
     }
+
+    /*
+      Returns a new 0-based array containing a copy of key-value pairs as
+      tuples.
+
+      :return: A new DefaultRectangular array.
+      :rtype: [] (keyType, valType)
+    */
+    proc toArray(): [] (keyType, valType) {
+      _enter(); defer _leave();
+
+      if !isCopyableType(keyType) || !isCopyableType(valType) then
+        compilerError("toArray requires copyable key and value types");
+
+      var A: [0..#size] (keyType, valType);
+
+      for (a, item) in zip(A, items()) {
+        a = item;
+      }
+
+      return A;
+    }
+
+    /*
+      Returns a new 0-based array containing a copy of keys. Array is not
+      guaranteed to be in any particular order.
+
+      :return: A new DefaultRectangular array.
+      :rtype: [] keyType
+    */
+    proc keysToArray(): [] keyType {
+      _enter(); defer _leave();
+
+      if !isCopyableType(keyType) then
+        compilerError("keysToArray requires a copyable key type");
+
+      var A: [0..#size] keyType;
+      for (a, k) in zip(A, keys()) {
+        a = k;
+      }
+      return A;
+    }
+
+    /*
+      Returns a new 0-based array containing a copy of values. Array is not
+      guaranteed to be in any particular order.
+
+      :return: A new DefaultRectangular array.
+      :rtype: [] valType
+    */
+    proc valuesToArray(): [] valType {
+      _enter(); defer _leave();
+
+      if !isCopyableType(valType) then
+        compilerError("valuesToArray requires a copyable value type");
+
+      var A: [0..#size] valType;
+      for (a, v) in zip(A, values()) {
+        a = v;
+      }
+      return A;
+    }
   }
 }

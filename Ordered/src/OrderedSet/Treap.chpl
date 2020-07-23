@@ -316,6 +316,52 @@ module Treap {
     }
 
     /*
+      Helper procedure to locate a certain node
+      Returns a ref to the node
+    */
+    pragma "no doc"
+    proc _findRef(ref node: nodeType, element: eltType) ref: nodeType
+    lifetime return node {
+      if node == nil then return node;
+      var cmp = chpl_compare(element, node!.element, comparator);
+      if cmp == 0 then return node;
+      else if cmp < 0 then return _findRef(node!.children[0], element);
+      else return _findRef(node!.children[1], element);
+    }
+
+    /* Given one element, return the reference to the element in the orderedSet, 
+       which equals to the former in the perspective of the comparator.
+
+       This procedure could halt when there is no hit
+
+       Used by orderedMap
+     */
+    pragma "no doc"
+    proc _getReference(element: eltType) ref {
+      var node = _findRef(_root, element);
+      if node == nil then
+        boundsCheckHalt("index " + element:string + " out of bounds");
+      ref result = node!.element;
+      return result;
+    }
+
+    /* Given one element, return the element in the orderedSet, which equals to the 
+       former in the perspective of the comparator.
+
+       This procedure could halt when there is no hit
+
+       Used by orderedMap
+     */
+    pragma "no doc"
+    proc const _getValue(element: eltType) const {
+      var node = _find(_root, element);
+      if node == nil then
+        boundsCheckHalt("index " + element:string + " out of bounds");
+      var result = node!.element;
+      return result;
+    }
+
+    /*
       Compare wrapper
     */
     pragma "no doc"

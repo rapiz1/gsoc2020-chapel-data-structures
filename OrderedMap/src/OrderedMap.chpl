@@ -264,6 +264,88 @@ module OrderedMap {
     }
 
     /*
+      Get the value mapped to the given key, or add the mapping if key does not
+      exist.
+
+      :arg k: The key to access
+      :type k: keyType
+
+      :returns: Reference to the value mapped to the given key.
+    */
+    proc ref this(k: keyType) ref where isDefaultInitializable(valType) {
+      _enter(); defer _leave();
+
+      if !instance.contains((k, nil)) then {
+        var defaultValue: valType;
+        instance.add((k, new shared _valueWrapper(defaultValue)?));
+      } 
+
+      ref e = instance._getReference((k, nil));
+
+      ref result = e[1]!.val;
+      return result;
+    }
+
+    pragma "no doc"
+    proc const this(k: keyType) const
+    where shouldReturnRvalueByValue(valType) && !isNonNilableClass(valType) {
+      _enter(); defer _leave();
+
+      // Could halt
+      var e = instance._getValue((k, nil));
+
+      const result = e[1]!.val;
+      return result;
+    }
+
+    pragma "no doc"
+    proc const this(k: keyType) const ref
+    where shouldReturnRvalueByConstRef(valType) && !isNonNilableClass(valType) {
+      _enter(); defer _leave();
+
+      // Could halt
+      var e = instance._getValue((k, nil));
+
+      const ref result = e[1]!.val;
+      return result;
+    }
+
+    pragma "no doc"
+    proc const this(k: keyType)
+    where isNonNilableClass(valType) {
+      compilerError("Cannot access non-nilable class directly. Use an",
+                    " appropriate accessor method instead.");
+    }
+
+    /* Get a borrowed reference to the element at position `k`.
+     */
+    proc getBorrowed(k: keyType) where isClass(valType) {
+      _enter(); defer _leave();
+
+      // This could halt
+      var element = instance._getReferencee((k, nil));
+
+      var result = element[1]!.val.borrow();
+
+      return result;
+    }
+
+    /* Get a reference to the element at position `k`. This method is not
+       available for non-nilable types.
+     */
+    proc getReference(k: keyType) ref
+    where !isNonNilableClass(valType) {
+      _enter(); defer _leave();
+
+      // This could halt
+      var element = instance._getReferencee((k, nil));
+
+      ref result = element[1]!.val;
+
+      return result;
+    }
+
+    /*
       Get a copy of the element stored at position `k`. This method is only
       available when a map's `valType` is a non-nilable class.
     */

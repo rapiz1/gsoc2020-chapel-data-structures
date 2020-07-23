@@ -420,6 +420,17 @@ module OrderedMap {
     }
 
     /*
+      Iterates over the values of this map.
+
+      :yields: A reference to one of the values contained in this map.
+    */
+    iter values() ref {
+      for kv in instance {
+        yield kv[1]!.val;
+      }
+    }
+
+    /*
       Writes the contents of this map to a channel. The format looks like:
 
         .. code-block:: chapel

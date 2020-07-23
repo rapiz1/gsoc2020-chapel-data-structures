@@ -157,27 +157,27 @@ module OrderedSet {
 
     //FIXME: Workaround for https://github.com/chapel-lang/chapel/issues/16045
     pragma "no doc"
-    proc const kth(k: int, out result: eltType): bool {
+    proc const kth(k: int, ref result: eltType): bool {
       return instance.kth(k, result);
     }
 
     pragma "no doc"
-    proc const lowerBound(e: eltType, out result: eltType): bool {
+    proc const lowerBound(e: eltType, ref result: eltType): bool {
       return instance.lowerBound(e, result);
     }
 
     pragma "no doc"
-    proc const upperBound(e: eltType, out result: eltType): bool {
+    proc const upperBound(e: eltType, ref result: eltType): bool {
       return instance.upperBound(e, result);
     }
 
     pragma "no doc"
-    proc const predecessor(e: eltType, out result: eltType) {
+    proc const predecessor(e: eltType, ref result: eltType) {
       return instance.predecessor(e, result);
     }
 
     pragma "no doc"
-    proc const successor(e: eltType, out result: eltType) {
+    proc const successor(e: eltType, ref result: eltType) {
       return instance.successor(e, result);
     }
   }

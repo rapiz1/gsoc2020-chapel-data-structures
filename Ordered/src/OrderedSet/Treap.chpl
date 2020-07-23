@@ -492,7 +492,7 @@ module Treap {
       :returns: whether there is such an element
       :rtype: `bool`
     */
-    proc const lowerBound(e: eltType, out result: eltType): bool {
+    proc const lowerBound(e: eltType, ref result: eltType): bool {
       _enter(); defer _leave();
       var node = _lower_bound(_root, e);
       if node == nil then return false;
@@ -511,7 +511,7 @@ module Treap {
       :returns: whether there is such an element
       :rtype: `bool`
     */
-    proc const upperBound(e: eltType, out result: eltType): bool {
+    proc const upperBound(e: eltType, ref result: eltType): bool {
       _enter(); defer _leave();
       var node = _upper_bound(_root, e);
       if node == nil then return false;
@@ -533,7 +533,7 @@ module Treap {
       :return: if there is such one element
       :rtype: `bool`
     */
-    proc const predecessor(e: eltType, out result: eltType) {
+    proc const predecessor(e: eltType, ref result: eltType) {
       _enter(); defer _leave();
       var baseNode = _find(_root, e);
       if baseNode == nil {
@@ -564,7 +564,7 @@ module Treap {
       :return: if there is such one element
       :rtype: `bool`
     */
-    proc const successor(e: eltType, out result: eltType) {
+    proc const successor(e: eltType, ref result: eltType) {
       _enter(); defer _leave();
       var baseNode = _find(_root, e);
       if baseNode == nil {
@@ -626,7 +626,7 @@ module Treap {
       :return: if there is such one element
       :rtype: `bool`
     */
-    proc const kth(k: int, out result: eltType): bool {
+    proc const kth(k: int, ref result: eltType): bool {
       _enter(); defer _leave();
 
       var resultNode = _kth(_root, k);
